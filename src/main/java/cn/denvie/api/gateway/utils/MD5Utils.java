@@ -16,7 +16,7 @@ public class MD5Utils {
      * 对字符串md5加密。
      *
      * @param text 传入要加密的字符串
-     * @return MD5加密后的字符串
+     * @return 32位MD5加密后的字符串
      */
     public static String md5(String text) {
         return md5(text, 32);
@@ -66,10 +66,23 @@ public class MD5Utils {
         return md5;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test
+    ///////////////////////////////////////////////////////////////////////////
+
     public static void main(String[] args) {
-        String md5 = md5("password");
-        String md52 = md5("password", 32);
-        System.err.println(md5);
-        System.err.println(md52);
+
+        String pwd = "security password";
+
+        String md5 = md5(pwd);
+        String md5_16 = md5(pwd, 16);
+        String md5_32 = md5(pwd, 32);
+        String md5_64 = md5(pwd, 64);
+
+        System.out.println(md5);
+        System.out.println(md5_16);
+        System.out.println(md5_32);
+        System.out.println(md5_64);
     }
+
 }

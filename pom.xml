@@ -12,8 +12,8 @@
 
     <groupId>cn.denvie</groupId>
     <artifactId>apiMapping-gateway</artifactId>
-    <version>1.0.0</version>
-    <packaging>war</packaging>
+    <version>1.1.0</version>
+    <packaging>jar</packaging>
     <name>apiMapping-gateway</name>
     <description>API Gateway</description>
 
