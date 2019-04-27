@@ -1,18 +1,20 @@
 package cn.denvie.api.service;
 
+import cn.denvie.api.gateway.common.EnctyptType;
 import cn.denvie.api.gateway.common.TokenParam;
+import cn.denvie.api.gateway.core.ApiConfig;
 import cn.denvie.api.gateway.core.ApiToken;
 import cn.denvie.api.gateway.core.TokenService;
+import cn.denvie.api.gateway.utils.RSAUtils;
 import cn.denvie.api.gateway.utils.RandomUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class TokenServiceImpl implements TokenService {
-
-    private static final long EXPIRE_TIME = 2 * 60 * 60 * 1000;
 
     private static volatile ConcurrentHashMap<String, ApiToken> sTokenMap;
     private static volatile ConcurrentHashMap<String, String> sUserTokenMap;
@@ -38,13 +40,23 @@ public class TokenServiceImpl implements TokenService {
             sUserTokenMap.put(param.getMemberId(), apiToken.getAccessToken());
         }
 
-        apiToken.setSecret(RandomUtils.generateSecret());
+        // 生成密钥
+        if (ApiConfig.ENCTYPT_TYPE == EnctyptType.AES) {
+            apiToken.setSecret(RandomUtils.generateSecret());
+        } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.RSA) {
+            Map<String, String> keyMap = RSAUtils.generateRSAKeyBase64(512);
+            String privateKey = keyMap.get(RSAUtils.KEY_PRIVATE);
+            String publicKey = keyMap.get(RSAUtils.KEY_PUBLIC);
+            apiToken.setSecret(publicKey);
+            apiToken.setPrivateScret(privateKey);
+        }
+
         apiToken.setClientIp(param.getClientIp());
         apiToken.setClientType(param.getClientType());
         apiToken.setClientCode(param.getClientCode());
         apiToken.setClientUserCode(param.getClientUserCode());
         apiToken.setCreateTime(System.currentTimeMillis());
-        apiToken.setExpireTime(apiToken.getCreateTime() + EXPIRE_TIME);
+        apiToken.setExpireTime(apiToken.getCreateTime() + ApiConfig.EXPIRE_TIME);
 
         return apiToken;
     }

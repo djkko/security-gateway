@@ -77,21 +77,21 @@ public class AESUtils {
     /**
      * 根据种子生成AES密钥。
      */
-    public static byte[] generateAESKey(String seed) throws Exception {
-        return generateAESKey(seed.getBytes(CHARSET));
+    public static byte[] generateAESKey(byte[] seedBytes) throws Exception {
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(ALGORITHM);
+        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+        secureRandom.setSeed(seedBytes);
+        keyGenerator.init(128, secureRandom); // 192 and 256 bits may not be available
+        SecretKey secretKey = keyGenerator.generateKey();
+        byte[] rawKey = secretKey.getEncoded();
+        return rawKey;
     }
 
     /**
      * 根据种子生成AES密钥。
      */
-    public static byte[] generateAESKey(byte[] seedBytes) throws Exception {
-        KeyGenerator kgen = KeyGenerator.getInstance(ALGORITHM);
-        SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-        sr.setSeed(seedBytes);
-        kgen.init(128, sr); // 192 and 256 bits may not be available
-        SecretKey skey = kgen.generateKey();
-        byte[] raw = skey.getEncoded();
-        return raw;
+    public static byte[] generateAESKey(String seed) throws Exception {
+        return generateAESKey(seed.getBytes(CHARSET));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -100,18 +100,23 @@ public class AESUtils {
 
     public static void main(String[] args) throws Exception {
 
-        String key = MD5Utils.md5("Denvie", 16);
-        String text = "待加密的内容";
+        String keySrc = "Denvie";
+        String text = "AES Test By Denvie";
 
         // 16进制加解密
+        byte[] keyBytes = generateAESKey(keySrc);
+        System.out.println("生成HexKey: " + HexUtils.toHexString(keyBytes));
+        String key = new String(keyBytes, CHARSET);
         String encrypt = encrypt(text, key);
-        System.err.println(encrypt);
-        System.err.println(decryptString(encrypt, key));
+        System.out.println("加密：" + encrypt);
+        System.out.println("解密：" + decryptString(encrypt, key));
 
         // Base64加解密
-        String encrypt2 = encryptToBase64(text, key);
-        System.err.println(encrypt2);
-        System.err.println(decryptStringFromBase64(encrypt2, key));
+        String randomKey = MD5Utils.md5(keySrc, 16);
+        System.out.println("生成StringKey: " + randomKey);
+        String encrypt2 = encryptToBase64(text, randomKey);
+        System.out.println("加密：" + encrypt2);
+        System.out.println("解密：" + decryptStringFromBase64(encrypt2, randomKey));
     }
 
 }

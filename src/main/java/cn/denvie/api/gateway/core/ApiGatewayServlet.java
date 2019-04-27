@@ -19,7 +19,7 @@ import java.io.IOException;
 @WebServlet(name = "apiGatewayServlet", urlPatterns = "/api", loadOnStartup = 2)
 public class ApiGatewayServlet extends HttpServlet {
 
-    ApplicationContext context;
+    private ApplicationContext context;
     private ApiGatewayHandler apiHandler;
 
     @Override

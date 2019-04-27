@@ -42,7 +42,10 @@ public class LoginController {
         param.setClientCode(clientCode);
         param.setClientIp(request.getRemoteAddr());
         param.setClientUserCode(user.getUsername());
+
         ApiToken apiToken = tokenService.createToken(param);
+        // 私钥不发送给客户端
+        apiToken.setPrivateScret("");
 
         return ResponseUtils.success(apiToken);
     }

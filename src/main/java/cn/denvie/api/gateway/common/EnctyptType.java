@@ -17,7 +17,7 @@ public enum  EnctyptType {
      */
     AES,
     /**
-     * RSA加密(待扩展)
+     * RSA加密
      */
     RSA
 

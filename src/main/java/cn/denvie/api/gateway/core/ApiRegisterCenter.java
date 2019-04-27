@@ -87,14 +87,14 @@ public class ApiRegisterCenter {
         return applicationContext;
     }
 
-    // 用于执行对应的API方法，
+    // 用于执行对应的API方法
     public class ApiRunnable {
-        String apiName;             // ApiMapping Name
-        String targetName;          // Spring Ioc Bean name
-        Object target;              // Bean实例
-        Method targetMethod;        // 执行的方法
-        String targetMethodName;    // 执行的方法全路径
-        ApiMapping apiMapping;
+        private String apiName;             // ApiMapping Name
+        private String targetName;          // Spring Ioc Bean name
+        private Object target;              // Bean实例
+        private Method targetMethod;        // 执行的方法
+        private String targetMethodName;    // 执行的方法全路径
+        private ApiMapping apiMapping;
 
         public Object run(Object... args) throws Exception {
             if (target == null) {

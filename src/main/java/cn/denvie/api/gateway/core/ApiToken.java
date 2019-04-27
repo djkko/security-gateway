@@ -13,10 +13,11 @@ public class ApiToken implements Serializable {
     private long id;                // 表主键，自增长
     private String memberId;        // 会员ID
     private String accessToken;     // 访问Token
-    private String secret;          // 发送给客户端的密钥
+    private String secret;          // 发送给客户端的密钥，如AES的密钥、RSA的公钥
+    private String privateScret;    // 私钥
     private String clientIp;        // 客户端IP
     private String clientType;      // 客户端类别，android、ios、web...
-    private String clientCode;      // 设备标识
+    private String clientCode;      // 设备唯一标识
     private String clientUserCode;  // 设备用户标识
     private long createTime;       // 创建时间
     private long expireTime;       // 失效时间
@@ -51,6 +52,14 @@ public class ApiToken implements Serializable {
 
     public void setSecret(String secret) {
         this.secret = secret;
+    }
+
+    public String getPrivateScret() {
+        return privateScret;
+    }
+
+    public void setPrivateScret(String privateScret) {
+        this.privateScret = privateScret;
     }
 
     public String getClientIp() {

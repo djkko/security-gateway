@@ -31,7 +31,7 @@ public class RSAUtils {
      * 私钥的key为{@link RSAUtils#KEY_PRIVATE private}，公钥的key为{@link RSAUtils#KEY_PUBLIC public}。
      *
      * @param keySize 密钥长度，512~65535，必需是64的整数位，默认1024
-     * @return Map<String                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               byte                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               [                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ]>
+     * @return
      */
     public static Map<String, byte[]> generateRSAKey(int keySize) {
         Map<String, byte[]> map = new HashMap<>();
@@ -56,11 +56,11 @@ public class RSAUtils {
     }
 
     /**
-     * 生成RSA公私密钥对（Base64编码）。
+     * 生成RSA公私密钥对。
      * 私钥的key为{@link RSAUtils#KEY_PRIVATE private}，公钥的key为{@link RSAUtils#KEY_PUBLIC public}。
      *
-     * @param keySize 密钥长度，512~65535，必需是64的整数位，默认1024
-     * @return Map<String                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               String>
+     * @param keySize 密钥长度，512~65535，必需是64的整数倍，默认1024
+     * @return
      */
     public static Map<String, String> generateRSAKeyBase64(int keySize) {
         Map<String, String> stringMap = new HashMap<>();
@@ -210,7 +210,7 @@ public class RSAUtils {
      * 公钥解密。
      *
      * @param rsaPublicKeyBase64 Base64编码的公钥
-     * @param srcBase64           Base64编码的密文
+     * @param srcBase64          Base64编码的密文
      * @return
      */
     public static String decryptByPublicKey(String rsaPublicKeyBase64, String srcBase64) {
@@ -226,16 +226,96 @@ public class RSAUtils {
         return null;
     }
 
+    /**
+     * 签名（MD5withRSA方式）。
+     *
+     * @param content       待签名内容
+     * @param rsaPrivateKey 私钥
+     * @return
+     */
+    public static byte[] sign(String content, byte[] rsaPrivateKey) {
+        try {
+            PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(rsaPrivateKey);
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
+            PrivateKey privateKey = keyFactory.generatePrivate(pkcs8EncodedKeySpec);
+            Signature signature = Signature.getInstance("MD5withRSA");
+            signature.initSign(privateKey);
+            signature.update(content.getBytes(CHARSET));
+            return signature.sign();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 签名（MD5withRSA方式）。
+     *
+     * @param content             待签名内容
+     * @param rsaPrivateKeyBase64 Base64编码的私钥
+     * @return Base64编码的签名字符串
+     */
+    public static String sign(String content, String rsaPrivateKeyBase64) {
+        byte[] bytes = sign(content, Base64Utils.decodeFromString(rsaPrivateKeyBase64));
+        if (bytes != null) {
+            return Base64Utils.encodeToString(bytes);
+        }
+        return null;
+    }
+
+    /**
+     * 签名验证（MD5withRSA方式）。
+     *
+     * @param src          原文
+     * @param signBytes    已签名byte[]内容
+     * @param rsaPublicKey 公钥
+     * @return
+     */
+    public static boolean signValidate(String src, byte[] signBytes, byte[] rsaPublicKey) {
+        try {
+            X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(rsaPublicKey);
+            KeyFactory keyFactory = KeyFactory.getInstance(ALGORITHM);
+            PublicKey publicKey = keyFactory.generatePublic(x509EncodedKeySpec);
+            Signature signature = Signature.getInstance("MD5withRSA");
+            signature.initVerify(publicKey);
+            signature.update(src.getBytes(CHARSET));
+            return signature.verify(signBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 签名验证（MD5withRSA方式）。
+     *
+     * @param src                原文
+     * @param signBase64         已签名Base64内容
+     * @param rsaPublicKeyBase64 Base64公钥
+     * @return
+     */
+    public static boolean signValidate(String src, String signBase64, String rsaPublicKeyBase64) {
+
+        return signValidate(src, Base64Utils.decodeFromString(signBase64),
+                Base64Utils.decodeFromString(rsaPublicKeyBase64));
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test
     ///////////////////////////////////////////////////////////////////////////
 
     public static void main(String[] args) throws Exception {
+
         String src = "rsa encrypt by denvie";
+
         // 公钥加密、私钥解密
         publicEncodePrivateDecode(src);
+
         // 私钥加密、公钥解密
         privateEncodePublicDecode(src);
+
+        // 私钥签名、公钥验签
+        privateSignPublicValidate(src);
     }
 
     private static void publicEncodePrivateDecode(String src) throws Exception {
@@ -275,6 +355,24 @@ public class RSAUtils {
         // 解密
         result = decryptByPublicKey(rsaPublicKeyBytes, result);
         System.out.println("公钥解密: " + new String(result, CHARSET));
+    }
+
+    private static void privateSignPublicValidate(String src) {
+        System.out.println("======== 私钥签名、公钥验签 ========");
+
+        // 生成公私钥对
+        Map<String, byte[]> keyMap = generateRSAKey(512);
+        byte[] rsaPrivateKeyBytes = keyMap.get(KEY_PRIVATE);
+        byte[] rsaPublicKeyBytes = keyMap.get(KEY_PUBLIC);
+        System.out.println("RSAPrivateKey: " + Base64Utils.encodeToString(rsaPrivateKeyBytes));
+        System.out.println("RSAPublicKey:  " + Base64Utils.encodeToString(rsaPublicKeyBytes));
+
+        // 签名
+        byte[] result = sign(src, rsaPrivateKeyBytes);
+        System.out.println("私钥签名: " + Base64Utils.encodeToString(result));
+
+        // 验签
+        System.out.println("公钥验签: " + signValidate(src, result, rsaPublicKeyBytes));
     }
 
 }
