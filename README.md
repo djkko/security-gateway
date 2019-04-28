@@ -4,7 +4,7 @@
 一款简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率、同时保证接口安全。
 
 #### @ApiMapping用法
-```
+```java
 @Service
 public class UserServiceImpl implements UserService {
     @ApiMapping(value = "user_add", needLogin = true, needParams = true)
@@ -29,7 +29,7 @@ cn.denvie.api.tokenValidTime=1209600000
 ```
 
 #### 自定义Token管理TokenService的实现
-```
+```java
 import cn.denvie.api.gateway.common.TokenParam;
 import cn.denvie.api.gateway.core.ApiToken;
 import java.security.NoSuchAlgorithmException;
@@ -50,7 +50,7 @@ public class TokenServiceImpl implements TokenService {
 ```
 
 #### 自定义接口调用结果ResponseService的实现
-```
+```java
 import cn.denvie.api.gateway.common.ApiResponse;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +74,7 @@ public class ResponseServiceImpl implements ResponseService {
 ```
 
 #### 自定义签名生成规则SignatureService的实现
-```
+```java
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
 
@@ -82,6 +82,21 @@ import org.springframework.stereotype.Service;
 public class SignatureServiceImpl implements SignatureService {
     @Override
     public String sign(ApiRequest param) {
+        return null;
+    }
+}
+```
+
+#### 自定义接口调用异常处理器InvokExceptionHandler的实现
+```java
+import cn.denvie.api.gateway.common.ApiResponse;
+import cn.denvie.api.gateway.core.ApiRequest;
+import org.springframework.stereotype.Service;
+
+@Service
+public class InvokExceptionHandlerImpl implements InvokExceptionHandler {
+    @Override
+    public ApiResponse handle(ApiRequest apiRequest, Throwable e) {
         return null;
     }
 }

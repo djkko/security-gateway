@@ -24,8 +24,8 @@ public class ApiParam {
     public static void main(String[] args) throws Exception {
         String apiName = "user_add";
 //        String apiName = "user_list";
-        String accessToken = "aa9aaffa71b04b769570e68e3ca8094f";
-        String secret = "fcdbd18905f7c10b";
+        String accessToken = "3343fd1f23544c19a622d1a3dae52fd3";
+        String secret = "9babb8b9ec5c033f";
 //        String params = Base64Utils.encodeToString("{\"username\":\"aaa\", \"password\":\"aaa\"}".getBytes());
 //        String params = Base64Utils.encodeToString("{}".getBytes());
         String params = AESUtils.encryptToBase64("{\"username\":\"bbb\", \"password\":\"ccc\"}", secret);

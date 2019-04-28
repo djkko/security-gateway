@@ -1,6 +1,7 @@
 package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
+import cn.denvie.api.gateway.service.InvokExceptionHandler;
 import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.gateway.service.SignatureService;
 import cn.denvie.api.gateway.service.TokenService;
@@ -175,6 +176,23 @@ public class ApiConfig {
                 String timestamp = param.getTimestamp();
                 String key = secret + apiName + params + accessToken + timestamp + secret;
                 return MD5Utils.md5(key);
+            }
+        };
+    }
+
+    /**
+     * API调用异常处理的默认实现，调用方可自定义。
+     */
+    @Bean
+    @ConditionalOnMissingBean(InvokExceptionHandler.class)
+    public InvokExceptionHandler invokExceptionHandler(ResponseService responseService) {
+
+        return new InvokExceptionHandler() {
+            @Override
+            public ApiResponse handle(ApiRequest apiRequest, Throwable e) {
+                String errMsg = e == null ?
+                        ApiCode.COMMON_ERROR.message() : e.getMessage();
+                return responseService.error(ApiCode.COMMON_ERROR.code(), errMsg, null);
             }
         };
     }

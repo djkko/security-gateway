@@ -7,6 +7,7 @@ import cn.denvie.api.gateway.service.TokenService;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.JsonUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
+import cn.denvie.api.gateway.service.InvokExceptionHandler;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private SignatureService signatureService;
     @Autowired
     ApiProperties apiProperties;
+    @Autowired
+    InvokExceptionHandler invokExceptionHandler;
 
     private ParameterNameDiscoverer parameterUtils;
     private ApiRegisterCenter apiRegisterCenter;
@@ -106,7 +109,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             String errMsg = e.getTargetException() == null ?
                     e.toString() : e.getTargetException().getMessage();
             logger.error("调用接口【" + apiName + "】异常，" + errMsg + "，参数=" + apiParams/*, e.getTargetException()*/);
-            apiResponse = responseService.error(ApiCode.COMMON_ERROR.code(), errMsg, null);
+            apiResponse = invokExceptionHandler.handle(apiRequest, e.getTargetException());
         } catch (Exception e) {
             logger.error("其他异常", e);
             ApiException apiException = new ApiException(e.getMessage());
