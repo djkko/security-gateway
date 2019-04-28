@@ -2,7 +2,9 @@ package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
 import cn.denvie.api.gateway.service.ResponseService;
+import cn.denvie.api.gateway.service.SignatureService;
 import cn.denvie.api.gateway.service.TokenService;
+import cn.denvie.api.gateway.utils.MD5Utils;
 import cn.denvie.api.gateway.utils.RSAUtils;
 import cn.denvie.api.gateway.utils.RandomUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,7 +34,7 @@ public class ApiConfig {
     /**
      * 是否启用客户端与服务端时间差校验
      */
-    public static final boolean TIMESTAMP_ENABLE = true;
+    public static final boolean TIMESTAMP_CHECK_ENABLE = true;
 
     /**
      * 允许的客户端请求时间与服务端时间差
@@ -137,6 +139,27 @@ public class ApiConfig {
                 response.setMessage(message);
                 response.setData(data);
                 return response;
+            }
+        };
+    }
+
+    /**
+     * SignatureService的默认实现，调用方可自定义。
+     */
+    @Bean
+    @ConditionalOnMissingBean(SignatureService.class)
+    public SignatureService signatureService() {
+
+        return new SignatureService() {
+            @Override
+            public String sign(ApiRequest param) {
+                String apiName = param.getApiName();
+                String accessToken = param.getAccessToken();
+                String secret = param.getSecret();
+                String params = param.getParams();
+                String timestamp = param.getTimestamp();
+                String key = secret + apiName + params + accessToken + timestamp + secret;
+                return MD5Utils.md5(key);
             }
         };
     }

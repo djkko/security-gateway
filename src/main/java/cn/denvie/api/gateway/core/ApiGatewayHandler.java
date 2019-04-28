@@ -2,10 +2,10 @@ package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
 import cn.denvie.api.gateway.service.ResponseService;
+import cn.denvie.api.gateway.service.SignatureService;
 import cn.denvie.api.gateway.service.TokenService;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.JsonUtils;
-import cn.denvie.api.gateway.utils.MD5Utils;
 import cn.denvie.api.gateway.utils.RSAUtils;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
@@ -43,6 +43,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private TokenService tokenService;
     @Autowired
     private ResponseService responseService;
+    @Autowired
+    private SignatureService signatureService;
 
     private ParameterNameDiscoverer parameterUtils;
     private ApiRegisterCenter apiRegisterCenter;
@@ -138,53 +140,38 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     // 验证签名和参数
     private ApiRequest checkSignAndParams(ApiRequest request) throws ApiException {
         // 解密params参数值
-        if (ApiConfig.ENCTYPT_TYPE == EnctyptType.AES) {
-            try {
+        try {
+            if (ApiConfig.ENCTYPT_TYPE == EnctyptType.AES) {
                 String temp = request.getParams();
                 temp = AESUtils.decryptString(temp, request.getSecret());
                 request.setParams(temp);
-            } catch (Exception e) {
-                throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
-            }
-        } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.RSA) {
-            try {
+            } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.RSA) {
                 String privateKey = request.getPrivateScret();
                 String temp = request.getParams();
                 temp = RSAUtils.decryptByPrivateKey(privateKey, temp);
                 request.setParams(temp);
-            } catch (Exception e) {
-                throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
-            }
-        } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.BASE64) {
-            try {
+            } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.BASE64) {
                 String temp = request.getParams();
                 temp = new String(Base64Utils.decodeFromString(temp));
                 request.setParams(temp);
-            } catch (Exception e) {
-                throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
             }
+        } catch (Exception e) {
+            throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
         }
 
         // 生成签名
-        String apiName = request.getApiName();
-        String accessToken = request.getAccessToken();
-        String secret = request.getSecret();
-        String params = request.getParams();
-        String timestamp = request.getTimestamp();
-        String key = secret + apiName + params + accessToken + timestamp + secret;
-        String sign = MD5Utils.md5(key);
+        String sign = signatureService.sign(request);
 
+        // 验证签名
         if (!sign.toUpperCase().equals(request.getSign())) {
             throw new ApiException(ApiCode.CHECK_SIGN_INVALID);
         }
 
-        // 时间校验
-        if (ApiConfig.TIMESTAMP_ENABLE
-                && Math.abs(Long.valueOf(timestamp) - System.currentTimeMillis()) > ApiConfig.TIMESTAMP_DIFFER) {
+        // 时间差校验
+        long diffTime = Math.abs(Long.valueOf(request.getTimestamp()) - System.currentTimeMillis());
+        if (ApiConfig.TIMESTAMP_CHECK_ENABLE && diffTime > ApiConfig.TIMESTAMP_DIFFER) {
             throw new ApiException(ApiCode.CHECK_TIME_INVALID);
         }
-
-        // 可根据request.getClientType()和request.getClientCode()扩展设备校验
 
         // 可根据request.getClientIp()扩展IP校验
 
