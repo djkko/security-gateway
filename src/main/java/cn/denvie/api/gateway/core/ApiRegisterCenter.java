@@ -46,13 +46,13 @@ public class ApiRegisterCenter {
 
     private void addApiItem(ApiMapping apiMapping, String beanName, Method method, Class<?> type) {
         if (!checkApiMapping()) return;
-        ApiRunnable apiRun = new ApiRunnable();
-        apiRun.apiName = apiMapping.value();
-        apiRun.targetName = beanName;
-        apiRun.targetMethod = method;
-        apiRun.targetMethodName = type.getName() + "." + method.getName();
-        apiRun.apiMapping = apiMapping;
-        apiMap.put(apiRun.apiName, apiRun);
+        ApiRunnable apiRunnable = new ApiRunnable();
+        apiRunnable.apiName = apiMapping.value();
+        apiRunnable.targetName = beanName;
+        apiRunnable.targetMethod = method;
+        apiRunnable.targetMethodName = type.getName() + "." + method.getName();
+        apiRunnable.apiMapping = apiMapping;
+        apiMap.put(apiRunnable.apiName, apiRunnable);
     }
 
     public ApiRunnable findApiRunnable(String apiName, String version) {

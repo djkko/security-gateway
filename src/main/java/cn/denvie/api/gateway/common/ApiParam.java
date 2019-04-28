@@ -24,8 +24,8 @@ public class ApiParam {
     public static void main(String[] args) throws Exception {
         String apiName = "user_add";
 //        String apiName = "user_list";
-        String accessToken = "0faef00284ed4439963e77c4ddda52f2";
-        String secret = "d4c0cf60e0173291";
+        String accessToken = "aa9aaffa71b04b769570e68e3ca8094f";
+        String secret = "fcdbd18905f7c10b";
 //        String params = Base64Utils.encodeToString("{\"username\":\"aaa\", \"password\":\"aaa\"}".getBytes());
 //        String params = Base64Utils.encodeToString("{}".getBytes());
         String params = AESUtils.encryptToBase64("{\"username\":\"bbb\", \"password\":\"ccc\"}", secret);
@@ -33,7 +33,7 @@ public class ApiParam {
         String paramsEncode = URLEncoder.encode(params, "utf-8");
 
         String timestamp = System.currentTimeMillis() + "";
-        String key = secret + apiName + params + accessToken + timestamp + secret;
+        String key = secret + apiName + "" + accessToken + timestamp + secret;
         String sign = MD5Utils.md5(key).toUpperCase();
 
         System.err.println("name：" + apiName);

@@ -7,7 +7,7 @@
 ```
 @Service
 public class UserServiceImpl implements UserService {
-    @ApiMapping(value = "user_add", needLogin = true)
+    @ApiMapping(value = "user_add", needLogin = true, needParams = true)
     public User add(String username, String password) throws ApiException {
         return new User();
     }

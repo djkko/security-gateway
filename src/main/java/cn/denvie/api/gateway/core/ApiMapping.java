@@ -21,6 +21,11 @@ public @interface ApiMapping {
     String value();
 
     /**
+     * 是否需要参数
+     */
+    boolean needParams() default true;
+
+    /**
      * 是否需要登录鉴权
      */
     boolean needLogin() default true;

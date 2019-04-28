@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    @ApiMapping(value = "user_add")
+    @ApiMapping(value = "user_add", needParams = false)
     public User add(String username, String password) throws ApiException {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             throw new ApiException("用户名和密码不能为空");

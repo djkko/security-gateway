@@ -103,9 +103,10 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             if (apiRequest != null) {
                 apiParams = apiRequest.getParams();
             }
-            logger.error("调用接口【" + apiName + "】异常，" + e.getMessage() + "，参数=" + apiParams/*, e.getTargetException()*/);
-            ApiException apiException = new ApiException(e.getMessage());
-            apiResponse = responseService.error(apiException.getCode(), apiException.getMessage(), null);
+            String errMsg = e.getTargetException() == null ?
+                    e.toString() : e.getTargetException().getMessage();
+            logger.error("调用接口【" + apiName + "】异常，" + errMsg + "，参数=" + apiParams/*, e.getTargetException()*/);
+            apiResponse = responseService.error(ApiCode.COMMON_ERROR.code(), errMsg, null);
         } catch (Exception e) {
             logger.error("其他异常", e);
             ApiException apiException = new ApiException(e.getMessage());
@@ -120,7 +121,13 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private ApiRequest buildApiRequest(HttpServletRequest request) {
         ApiRequest apiRequest = new ApiRequest();
         apiRequest.setApiName(request.getParameter(ApiParam.API_NAME));
-        apiRequest.setParams(request.getParameter(ApiParam.API_PARAMS));
+
+        // params参数处理
+        String params = request.getParameter(ApiParam.API_PARAMS);
+        if (params == null) {
+            params = "";
+        }
+        apiRequest.setParams(params);
 
         // Token支持Header和Param方式传值
         apiRequest.setAccessToken(request.getHeader(ApiParam.API_TOKEN));
@@ -182,23 +189,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }
 
         // 解密params参数值
-        try {
-            if (apiProperties.getEnctyptType() == EnctyptType.AES) {
-                String temp = apiRequest.getParams();
-                temp = AESUtils.decryptStringFromBase64(temp, apiRequest.getSecret());
-                apiRequest.setParams(temp);
-            } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
-                String privateKey = apiRequest.getPrivateScret();
-                String temp = apiRequest.getParams();
-                temp = RSAUtils.decryptByPrivateKey(privateKey, temp);
-                apiRequest.setParams(temp);
-            } else if (apiProperties.getEnctyptType() == EnctyptType.BASE64) {
-                String temp = apiRequest.getParams();
-                temp = new String(Base64Utils.decodeFromString(temp));
-                apiRequest.setParams(temp);
-            }
-        } catch (Exception e) {
-            throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
+        if (!StringUtils.isEmpty(apiRequest.getParams())) {
+            decryptParams(apiRequest);
         }
 
         // 时间差校验
@@ -222,6 +214,27 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         return apiRequest;
     }
 
+    private void decryptParams(ApiRequest apiRequest) throws ApiException {
+        try {
+            if (apiProperties.getEnctyptType() == EnctyptType.AES) {
+                String temp = apiRequest.getParams();
+                temp = AESUtils.decryptStringFromBase64(temp, apiRequest.getSecret());
+                apiRequest.setParams(temp);
+            } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
+                String privateKey = apiRequest.getPrivateScret();
+                String temp = apiRequest.getParams();
+                temp = RSAUtils.decryptByPrivateKey(privateKey, temp);
+                apiRequest.setParams(temp);
+            } else if (apiProperties.getEnctyptType() == EnctyptType.BASE64) {
+                String temp = apiRequest.getParams();
+                temp = new String(Base64Utils.decodeFromString(temp));
+                apiRequest.setParams(temp);
+            }
+        } catch (Exception e) {
+            throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
+        }
+    }
+
     private ApiRegisterCenter.ApiRunnable valdateSysParams(HttpServletRequest request) throws ApiException {
         String apiName = request.getParameter(ApiParam.API_NAME);
         String apiParams = request.getParameter(ApiParam.API_PARAMS);
@@ -231,14 +244,16 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         ApiRegisterCenter.ApiRunnable api;
         if (StringUtils.isEmpty(apiName)) {
             throw new ApiException(ApiCode.API_NAME_NULL);
-        } else if (StringUtils.isEmpty(apiParams)) {
-            throw new ApiException(ApiCode.API_PARAMS_NULL);
         } else if (StringUtils.isEmpty(apiToken)) {
             throw new ApiException(ApiCode.API_TOKEN_NULL);
         } else if (StringUtils.isEmpty(apiSign)) {
             throw new ApiException(ApiCode.API_SIGN_NULL);
         } else if ((api = apiRegisterCenter.findApiRunnable(apiName)) == null) {
             throw new ApiException(ApiCode.API_UNEXIST);
+        }
+
+        if (api.getApiMapping().needParams() && StringUtils.isEmpty(apiParams)) {
+            throw new ApiException(ApiCode.API_PARAMS_NULL);
         }
 
         return api;
@@ -253,7 +268,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         try {
             map = JsonUtils.toMap(paramJson);
         } catch (Exception e) {
-            throw new ApiException("调用失败：json字符串格式异常，请检查params参数");
+            throw new ApiException(ApiCode.CHECK_PARAMS_INVALID);
         }
         if (map == null) {
             map = new HashMap<>();
@@ -279,7 +294,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                 try {
                     args[i] = convertJsonToBean(map.get(paramNames.get(i)), paramTypes[i]);
                 } catch (Exception e) {
-                    throw new ApiException("调用失败：指定参数格式错误或值错误‘" + paramNames.get(i) + "’"
+                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数格式或值错误："
                             + e.getMessage());
                 }
             } else {

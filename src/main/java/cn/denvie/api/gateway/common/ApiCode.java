@@ -18,6 +18,7 @@ public enum ApiCode {
     CHECK_TIME_INVALID("10303", "验证失败：签名失效"),
     CHECK_DEVICE_INVALID("10304", "验证失败：非法设备"),
     CHECK_ENCRYPT_INVALID("10305", "验证失败：参数解密失败"),
+    CHECK_PARAMS_INVALID("10306", "验证失败：'params'参数格式异常"),
     API_NAME_NULL("10400", "调用失败：参数'name'为空"),
     API_PARAMS_NULL("10401", "调用失败：参数'params'为空"),
     API_TOKEN_NULL("10401", "调用失败：参数'token'为空"),
