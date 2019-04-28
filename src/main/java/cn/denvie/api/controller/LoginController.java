@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.NoSuchAlgorithmException;
 
 @RestController
 public class LoginController {
@@ -46,11 +47,16 @@ public class LoginController {
         param.setClientIp(request.getRemoteAddr());
         param.setClientUserCode(user.getUsername());
 
-        ApiToken apiToken = tokenService.createToken(param);
-        // 私钥不发送给客户端
-        apiToken.setPrivateScret("");
-
-        return responseService.success(apiToken);
+        try {
+            ApiToken  apiToken = tokenService.createToken(param);
+            // 私钥不发送给客户端
+            apiToken.setPrivateScret("");
+            return responseService.success(apiToken);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return responseService.error(ApiCode.COMMON_ERROR.code(),
+                    "生成密钥失败", null);
+        }
     }
 
 }

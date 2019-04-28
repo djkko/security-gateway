@@ -7,12 +7,14 @@ import cn.denvie.api.gateway.service.TokenService;
 import cn.denvie.api.gateway.utils.MD5Utils;
 import cn.denvie.api.gateway.utils.RSAUtils;
 import cn.denvie.api.gateway.utils.RandomUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,7 +70,7 @@ public class ApiConfig {
             private ConcurrentHashMap<String, String> sUserTokenMap = new ConcurrentHashMap<>();
 
             @Override
-            public ApiToken createToken(TokenParam param) {
+            public ApiToken createToken(TokenParam param) throws NoSuchAlgorithmException {
                 if (param == null) return null;
 
                 String token = sUserTokenMap.get(param.getMemberId());
@@ -101,7 +103,11 @@ public class ApiConfig {
                 apiToken.setCreateTime(System.currentTimeMillis());
                 apiToken.setExpireTime(apiToken.getCreateTime() + ApiConfig.EXPIRE_TIME);
 
-                return apiToken;
+                // 回传ApiToken的拷贝
+                ApiToken target = new ApiToken();
+                BeanUtils.copyProperties(apiToken, target);
+
+                return target;
             }
 
             @Override

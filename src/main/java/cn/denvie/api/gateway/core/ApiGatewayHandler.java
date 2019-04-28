@@ -108,13 +108,19 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         returnResult(result, response);
     }
 
+    // 根据HttpServletRequest构建Api请求参数
     private ApiRequest buildApiRequest(HttpServletRequest request) {
         ApiRequest apiRequest = new ApiRequest();
         apiRequest.setApiName(request.getParameter(ApiParam.API_NAME));
         apiRequest.setParams(request.getParameter(ApiParam.API_PARAMS));
-        apiRequest.setAccessToken(request.getParameter(ApiParam.API_TOKEN));
 
-        // 设备类型及设备唯一标识同时支持Header和Param方式传值
+        // Token支持Header和Param方式传值
+        apiRequest.setAccessToken(request.getHeader(ApiParam.API_TOKEN));
+        if (StringUtils.isEmpty(apiRequest.getAccessToken())) {
+            apiRequest.setAccessToken(request.getParameter(ApiParam.API_TOKEN));
+        }
+
+        // 设备类型及设备唯一标识支持Header和Param方式传值
         apiRequest.setClientType(request.getHeader(ApiParam.API_CLIENT_TYPE));
         if (StringUtils.isEmpty(apiRequest.getClientType())) {
             apiRequest.setClientType(request.getParameter(ApiParam.API_CLIENT_TYPE));
@@ -126,6 +132,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
         apiRequest.setTimestamp(request.getParameter(ApiParam.API_TIMESTAMP));
         apiRequest.setSign(request.getParameter(ApiParam.API_SIGN));
+
         return apiRequest;
     }
 
@@ -153,6 +160,13 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
     // 参数解密，签名、时间差、客户端设备等验证
     private ApiRequest checkSignAndParams(ApiRequest apiRequest, ApiToken apiToken) throws ApiException {
+        // 生成签名
+        String sign = signatureService.sign(apiRequest);
+        // 验证签名
+        if (!sign.toUpperCase().equals(apiRequest.getSign())) {
+            throw new ApiException(ApiCode.CHECK_SIGN_INVALID);
+        }
+
         // 解密params参数值
         try {
             if (ApiConfig.ENCTYPT_TYPE == EnctyptType.AES) {
@@ -173,14 +187,6 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
         }
 
-        // 生成签名
-        String sign = signatureService.sign(apiRequest);
-
-        // 验证签名
-        if (!sign.toUpperCase().equals(apiRequest.getSign())) {
-            throw new ApiException(ApiCode.CHECK_SIGN_INVALID);
-        }
-
         // 时间差校验
         long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
         if (ApiConfig.TIMESTAMP_CHECK_ENABLE && diffTime > ApiConfig.TIMESTAMP_DIFFER) {
@@ -189,10 +195,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
         // 客户端设备校验
         if (ApiConfig.TIMESTAMP_DEVICE_ENABLE) {
-            if (apiToken == null) {
-                throw new ApiException(ApiCode.CHECK_DEVICE_INVALID);
-            }
-            if (!StringUtils.isEmpty(apiToken.getClientType())
+            if (apiToken != null && !StringUtils.isEmpty(apiToken.getClientType())
                     && !StringUtils.isEmpty(apiToken.getClientCode())
                     && (!apiToken.getClientType().equals(apiRequest.getClientType())
                     || !apiToken.getClientCode().equals(apiRequest.getClientCode()))) {

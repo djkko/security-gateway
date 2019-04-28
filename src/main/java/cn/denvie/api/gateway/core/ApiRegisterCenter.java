@@ -23,6 +23,9 @@ public class ApiRegisterCenter {
 
     public void loadApiFromSpringBeans() {
         // spring ioc 扫描所有Bean
+        if (!checkValid()) {
+            return;
+        }
         String[] beanNames = applicationContext.getBeanDefinitionNames();
         Class<?> type;
         for (String name : beanNames) {
@@ -42,6 +45,7 @@ public class ApiRegisterCenter {
     }
 
     private void addApiItem(ApiMapping apiMapping, String beanName, Method method, Class<?> type) {
+        if (!checkApiMapping()) return;
         ApiRunnable apiRun = new ApiRunnable();
         apiRun.apiName = apiMapping.value();
         apiRun.targetName = beanName;
@@ -85,6 +89,23 @@ public class ApiRegisterCenter {
 
     public ApplicationContext getApplicationContext() {
         return applicationContext;
+    }
+
+    private static final String PCK = "cn.denvie.api";
+
+    private boolean checkValid() {
+        if (!ApiRegisterCenter.class.getName().startsWith(PCK)
+                || !ApiGatewayHandler.class.getName().startsWith(PCK)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkApiMapping() {
+        if (!ApiMapping.class.getName().startsWith(PCK)) {
+            return false;
+        }
+        return true;
     }
 
     /**
