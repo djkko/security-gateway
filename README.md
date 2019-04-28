@@ -3,8 +3,9 @@
 #### 介绍
 一款简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率、同时保证接口安全。
 
-#### @ApiMapping用法
-```java
+#### 用法
+在Spring管理的Bean的方法上添加@ApiMapping注解，即可对外暴露一个接口。
+```
 @Service
 public class UserServiceImpl implements UserService {
     @ApiMapping(value = "user_add", needLogin = true, needParams = true)
@@ -16,8 +17,8 @@ public class UserServiceImpl implements UserService {
 
 #### 配置项
 ```
-## 加密方式
-cn.denvie.api.enctyptType=rsa
+## 参数加密方式，目前支持：Base64、AES、RSA
+cn.denvie.api.enctyptType=AES
 ## 是否启用客户端与服务端时间差校验
 cn.denvie.api.ckeckTimestamp=true
 ## 允许的客户端请求时间与服务端时间差
@@ -29,7 +30,7 @@ cn.denvie.api.tokenValidTime=1209600000
 ```
 
 #### 自定义Token管理TokenService的实现
-```java
+```
 import cn.denvie.api.gateway.common.TokenParam;
 import cn.denvie.api.gateway.core.ApiToken;
 import java.security.NoSuchAlgorithmException;
@@ -50,7 +51,7 @@ public class TokenServiceImpl implements TokenService {
 ```
 
 #### 自定义接口调用结果ResponseService的实现
-```java
+```
 import cn.denvie.api.gateway.common.ApiResponse;
 import org.springframework.stereotype.Service;
 
@@ -74,7 +75,7 @@ public class ResponseServiceImpl implements ResponseService {
 ```
 
 #### 自定义签名生成规则SignatureService的实现
-```java
+```
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
 
@@ -88,7 +89,7 @@ public class SignatureServiceImpl implements SignatureService {
 ```
 
 #### 自定义接口调用异常处理器InvokExceptionHandler的实现
-```java
+```
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
