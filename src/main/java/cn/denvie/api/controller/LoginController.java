@@ -5,9 +5,8 @@ import cn.denvie.api.gateway.common.ApiCode;
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.common.TokenParam;
 import cn.denvie.api.gateway.core.ApiToken;
-import cn.denvie.api.gateway.core.TokenService;
-import cn.denvie.api.gateway.utils.RandomUtils;
-import cn.denvie.api.gateway.utils.ResponseUtils;
+import cn.denvie.api.gateway.service.TokenService;
+import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -23,17 +22,21 @@ public class LoginController {
     private UserService userService;
     @Autowired
     private TokenService tokenService;
+    @Autowired
+    private ResponseService responseService;
 
     @PostMapping("/login")
     public ApiResponse<ApiToken> login(String username, String password, String clientType,
                                        String clientCode, HttpServletRequest request) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
-            return ResponseUtils.error(ApiCode.LOGIN_ERROR, null);
+            return responseService.error(ApiCode.LOGIN_ERROR.code(),
+                    ApiCode.LOGIN_ERROR.message(), null);
         }
 
         User user = userService.login(username, password);
         if (user == null) {
-            return ResponseUtils.error(ApiCode.LOGIN_UNEXIST, null);
+            return responseService.error(ApiCode.LOGIN_UNEXIST.code(),
+                    ApiCode.LOGIN_UNEXIST.message(), null);
         }
 
         TokenParam param = new TokenParam();
@@ -47,7 +50,7 @@ public class LoginController {
         // 私钥不发送给客户端
         apiToken.setPrivateScret("");
 
-        return ResponseUtils.success(apiToken);
+        return responseService.success(apiToken);
     }
 
 }

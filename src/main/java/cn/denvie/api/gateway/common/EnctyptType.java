@@ -9,6 +9,10 @@ package cn.denvie.api.gateway.common;
 public enum  EnctyptType {
 
     /**
+     * 不加密
+     */
+    NONE,
+    /**
      * Base64加密
      */
     BASE64,

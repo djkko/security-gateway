@@ -87,7 +87,9 @@ public class ApiRegisterCenter {
         return applicationContext;
     }
 
-    // 用于执行对应的API方法
+    /**
+     * 用于执行对应的API方法。
+     */
     public class ApiRunnable {
         private String apiName;             // ApiMapping Name
         private String targetName;          // Spring Ioc Bean name

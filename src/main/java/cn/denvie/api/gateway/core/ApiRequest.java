@@ -8,16 +8,18 @@ package cn.denvie.api.gateway.core;
  */
 public class ApiRequest {
 
-    private String apiName;
-    private String memberId;
-    private String accessToken;
-    private String sign;
-    private String clientIp;
-    private String clientType;
-    private String clientCode;
-    private String timestamp;
-    private String params;
-    private boolean isLogin;
+    private String apiName;         // 调用的Api名称
+    private String memberId;        // 会员ID
+    private String accessToken;     // 访问Token
+    private String secret;          // 发送给客户端的密钥，如AES的密钥、RSA的公钥
+    private String privateScret;    // 私钥
+    private String sign;            // 签名
+    private String clientIp;        // 客户端IP
+    private String clientType;      // 客户端类别，android、ios、web...
+    private String clientCode;      // 设备唯一标识
+    private String timestamp;       // 客户端请求时间
+    private String params;          // 客户端请求参数
+    private boolean isLogin;        // 是否已登录
 
     public String getApiName() {
         return apiName;
@@ -41,6 +43,22 @@ public class ApiRequest {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
+
+    public String getPrivateScret() {
+        return privateScret;
+    }
+
+    public void setPrivateScret(String privateScret) {
+        this.privateScret = privateScret;
     }
 
     public String getSign() {

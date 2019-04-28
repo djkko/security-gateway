@@ -1,6 +1,7 @@
-package cn.denvie.api.gateway.core;
+package cn.denvie.api.gateway.service;
 
 import cn.denvie.api.gateway.common.TokenParam;
+import cn.denvie.api.gateway.core.ApiToken;
 
 /**
  * Token服务。
