@@ -45,6 +45,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private ResponseService responseService;
     @Autowired
     private SignatureService signatureService;
+    @Autowired
+    ApiProperties apiProperties;
 
     private ParameterNameDiscoverer parameterUtils;
     private ApiRegisterCenter apiRegisterCenter;
@@ -67,35 +69,41 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         String apiName = request.getParameter(ApiParam.API_NAME);
         String apiParams = request.getParameter(ApiParam.API_PARAMS);
         ApiResponse<?> result;
-        ApiRegisterCenter.ApiRunnable apiRun;
-        ApiRequest apiRequest;
+        ApiRegisterCenter.ApiRunnable apiRunnable;
+        ApiRequest apiRequest = null;
         ApiToken apiToken = null;
         try {
             // 系统参数验证
-            apiRun = valdateSysParams(request);
+            apiRunnable = valdateSysParams(request);
             // 构建ApiRequest
             apiRequest = buildApiRequest(request);
             // 验证Token
-            if (apiRequest.getAccessToken() != null) {
-                apiToken = checkToken(apiRequest);
+            if (!StringUtils.isEmpty(apiRequest.getAccessToken())) {
+                apiToken = checkToken(apiRequest, apiRunnable.getApiMapping().needLogin());
             }
             // 验证签名和参数
             checkSignAndParams(apiRequest, apiToken);
             // 登录验证
-            if (apiRun.getApiMapping().needLogin()) {
+            if (apiRunnable.getApiMapping().needLogin()) {
                 if (!apiRequest.isLogin()) {
                     throw new ApiException(ApiCode.UN_LOGIN);
                 }
             }
 
-            Object[] args = buildParams(apiRun, apiRequest.getParams(), request, response, apiRequest);
+            Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
             logger.info("请求接口【" + apiName + "】, 参数=" + apiRequest.getParams());
-            result = responseService.success(apiRun.run(args));
+            result = responseService.success(apiRunnable.run(args));
         } catch (ApiException e) {
-            logger.error("调用接口【" + apiName + "】异常, " + e.getMessage() + "，参数=" + apiParams/*, e*/);
+            if (apiRequest != null) {
+                apiParams = apiRequest.getParams();
+            }
+            logger.error("调用接口【" + apiName + "】异常，" + e.getMessage() + "，参数=" + apiParams/*, e*/);
             result = responseService.error(e.getCode(), e.getMessage(), null);
         } catch (InvocationTargetException e) {
-            logger.error("调用接口【" + apiName + "】异常, 参数=" + apiParams, e.getTargetException());
+            if (apiRequest != null) {
+                apiParams = apiRequest.getParams();
+            }
+            logger.error("调用接口【" + apiName + "】异常，" + e.getMessage() + "，参数=" + apiParams/*, e.getTargetException()*/);
             ApiException apiException = new ApiException(e.getMessage());
             result = responseService.error(apiException.getCode(), apiException.getMessage(), null);
         } catch (Exception e) {
@@ -137,14 +145,20 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     }
 
     // 验证Token
-    private ApiToken checkToken(ApiRequest request) throws ApiException {
+    private ApiToken checkToken(ApiRequest request, boolean needLogin) throws ApiException {
         // 验证Token
         ApiToken token = tokenService.getToken(request.getAccessToken());
         if (token == null) {
-            throw new ApiException(ApiCode.CHECK_TOKEN_NULL);
+            if (needLogin) {
+                throw new ApiException(ApiCode.CHECK_TOKEN_NULL);
+            }
+            return null;
         }
         if (new Date(token.getExpireTime()).before(new Date())) {
-            throw new ApiException(ApiCode.CHECK_TOKEN_INVALID);
+            if (needLogin) {
+                throw new ApiException(ApiCode.CHECK_TOKEN_INVALID);
+            }
+            return null;
         }
 
         // 注入用户信息
@@ -169,16 +183,16 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
         // 解密params参数值
         try {
-            if (ApiConfig.ENCTYPT_TYPE == EnctyptType.AES) {
+            if (apiProperties.getEnctyptType() == EnctyptType.AES) {
                 String temp = apiRequest.getParams();
                 temp = AESUtils.decryptStringFromBase64(temp, apiRequest.getSecret());
                 apiRequest.setParams(temp);
-            } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.RSA) {
+            } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
                 String privateKey = apiRequest.getPrivateScret();
                 String temp = apiRequest.getParams();
                 temp = RSAUtils.decryptByPrivateKey(privateKey, temp);
                 apiRequest.setParams(temp);
-            } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.BASE64) {
+            } else if (apiProperties.getEnctyptType() == EnctyptType.BASE64) {
                 String temp = apiRequest.getParams();
                 temp = new String(Base64Utils.decodeFromString(temp));
                 apiRequest.setParams(temp);
@@ -189,12 +203,12 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
         // 时间差校验
         long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
-        if (ApiConfig.TIMESTAMP_CHECK_ENABLE && diffTime > ApiConfig.TIMESTAMP_DIFFER) {
+        if (apiProperties.isCkeckTimestamp() && diffTime > apiProperties.getTimestampDiffer()) {
             throw new ApiException(ApiCode.CHECK_TIME_INVALID);
         }
 
         // 客户端设备校验
-        if (ApiConfig.TIMESTAMP_DEVICE_ENABLE) {
+        if (apiProperties.isCheckDevice()) {
             if (apiToken != null && !StringUtils.isEmpty(apiToken.getClientType())
                     && !StringUtils.isEmpty(apiToken.getClientCode())
                     && (!apiToken.getClientType().equals(apiRequest.getClientType())
@@ -235,7 +249,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
      */
     private Object[] buildParams(ApiRegisterCenter.ApiRunnable apiRunnable, String paramJson, HttpServletRequest request,
                                  HttpServletResponse response, ApiRequest apiRequest) throws ApiException {
-        Map<String, Object> map = null;
+        Map<String, Object> map;
         try {
             map = JsonUtils.toMap(paramJson);
         } catch (Exception e) {
