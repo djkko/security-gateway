@@ -37,6 +37,11 @@ public class ApiConfig {
     public static final boolean TIMESTAMP_CHECK_ENABLE = true;
 
     /**
+     * 是否启用客户端设备校验
+     */
+    public static final boolean TIMESTAMP_DEVICE_ENABLE = true;
+
+    /**
      * 允许的客户端请求时间与服务端时间差
      */
     public static final long TIMESTAMP_DIFFER = 10 * 60 * 1000;

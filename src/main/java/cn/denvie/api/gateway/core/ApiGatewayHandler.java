@@ -69,6 +69,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         ApiResponse<?> result;
         ApiRegisterCenter.ApiRunnable apiRun;
         ApiRequest apiRequest;
+        ApiToken apiToken = null;
         try {
             // 系统参数验证
             apiRun = valdateSysParams(request);
@@ -76,10 +77,10 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             apiRequest = buildApiRequest(request);
             // 验证Token
             if (apiRequest.getAccessToken() != null) {
-                checkToken(apiRequest);
+                apiToken = checkToken(apiRequest);
             }
             // 验证签名和参数
-            checkSignAndParams(apiRequest);
+            checkSignAndParams(apiRequest, apiToken);
             // 登录验证
             if (apiRun.getApiMapping().needLogin()) {
                 if (!apiRequest.isLogin()) {
@@ -112,15 +113,24 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         apiRequest.setApiName(request.getParameter(ApiParam.API_NAME));
         apiRequest.setParams(request.getParameter(ApiParam.API_PARAMS));
         apiRequest.setAccessToken(request.getParameter(ApiParam.API_TOKEN));
-        apiRequest.setClientType(request.getParameter(ApiParam.API_CLIENT_TYPE));
-        apiRequest.setClientType(request.getParameter(ApiParam.API_CLIENT_CODE));
+
+        // 设备类型及设备唯一标识同时支持Header和Param方式传值
+        apiRequest.setClientType(request.getHeader(ApiParam.API_CLIENT_TYPE));
+        if (StringUtils.isEmpty(apiRequest.getClientType())) {
+            apiRequest.setClientType(request.getParameter(ApiParam.API_CLIENT_TYPE));
+        }
+        apiRequest.setClientCode(request.getHeader(ApiParam.API_CLIENT_CODE));
+        if (StringUtils.isEmpty(apiRequest.getClientCode())) {
+            apiRequest.setClientCode(request.getParameter(ApiParam.API_CLIENT_CODE));
+        }
+
         apiRequest.setTimestamp(request.getParameter(ApiParam.API_TIMESTAMP));
         apiRequest.setSign(request.getParameter(ApiParam.API_SIGN));
         return apiRequest;
     }
 
-    // 验证token
-    private ApiRequest checkToken(ApiRequest request) throws ApiException {
+    // 验证Token
+    private ApiToken checkToken(ApiRequest request) throws ApiException {
         // 验证Token
         ApiToken token = tokenService.getToken(request.getAccessToken());
         if (token == null) {
@@ -130,55 +140,69 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             throw new ApiException(ApiCode.CHECK_TOKEN_INVALID);
         }
 
+        // 注入用户信息
+        request.setMemberId(token.getMemberId());
+        request.setLogin(true);
+
         // 注入密钥
         request.setSecret(token.getSecret());
         request.setPrivateScret(token.getPrivateScret());
 
-        return request;
+        return token;
     }
 
-    // 验证签名和参数
-    private ApiRequest checkSignAndParams(ApiRequest request) throws ApiException {
+    // 参数解密，签名、时间差、客户端设备等验证
+    private ApiRequest checkSignAndParams(ApiRequest apiRequest, ApiToken apiToken) throws ApiException {
         // 解密params参数值
         try {
             if (ApiConfig.ENCTYPT_TYPE == EnctyptType.AES) {
-                String temp = request.getParams();
-                temp = AESUtils.decryptString(temp, request.getSecret());
-                request.setParams(temp);
+                String temp = apiRequest.getParams();
+                temp = AESUtils.decryptStringFromBase64(temp, apiRequest.getSecret());
+                apiRequest.setParams(temp);
             } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.RSA) {
-                String privateKey = request.getPrivateScret();
-                String temp = request.getParams();
+                String privateKey = apiRequest.getPrivateScret();
+                String temp = apiRequest.getParams();
                 temp = RSAUtils.decryptByPrivateKey(privateKey, temp);
-                request.setParams(temp);
+                apiRequest.setParams(temp);
             } else if (ApiConfig.ENCTYPT_TYPE == EnctyptType.BASE64) {
-                String temp = request.getParams();
+                String temp = apiRequest.getParams();
                 temp = new String(Base64Utils.decodeFromString(temp));
-                request.setParams(temp);
+                apiRequest.setParams(temp);
             }
         } catch (Exception e) {
             throw new ApiException(ApiCode.CHECK_ENCRYPT_INVALID);
         }
 
         // 生成签名
-        String sign = signatureService.sign(request);
+        String sign = signatureService.sign(apiRequest);
 
         // 验证签名
-        if (!sign.toUpperCase().equals(request.getSign())) {
+        if (!sign.toUpperCase().equals(apiRequest.getSign())) {
             throw new ApiException(ApiCode.CHECK_SIGN_INVALID);
         }
 
         // 时间差校验
-        long diffTime = Math.abs(Long.valueOf(request.getTimestamp()) - System.currentTimeMillis());
+        long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
         if (ApiConfig.TIMESTAMP_CHECK_ENABLE && diffTime > ApiConfig.TIMESTAMP_DIFFER) {
             throw new ApiException(ApiCode.CHECK_TIME_INVALID);
         }
 
+        // 客户端设备校验
+        if (ApiConfig.TIMESTAMP_DEVICE_ENABLE) {
+            if (apiToken == null) {
+                throw new ApiException(ApiCode.CHECK_DEVICE_INVALID);
+            }
+            if (!StringUtils.isEmpty(apiToken.getClientType())
+                    && !StringUtils.isEmpty(apiToken.getClientCode())
+                    && (!apiToken.getClientType().equals(apiRequest.getClientType())
+                    || !apiToken.getClientCode().equals(apiRequest.getClientCode()))) {
+                throw new ApiException(ApiCode.CHECK_DEVICE_INVALID);
+            }
+        }
+
         // 可根据request.getClientIp()扩展IP校验
 
-        request.setLogin(true);
-        request.setMemberId(request.getMemberId());
-
-        return request;
+        return apiRequest;
     }
 
     private ApiRegisterCenter.ApiRunnable valdateSysParams(HttpServletRequest request) throws ApiException {
