@@ -130,26 +130,26 @@ public class ApiConfig {
 
         return new ResponseService() {
             @Override
-            public <T> ApiResponse<T> success(T data) {
+            public ApiResponse success(Object data) {
                 return build(ApiCode.SUCCESS, data);
             }
 
             @Override
-            public <T> ApiResponse<T> success(String code, String message, T data) {
+            public ApiResponse success(String code, String message, Object data) {
                 return build(code, message, data);
             }
 
             @Override
-            public <T> ApiResponse<T> error(String code, String message, T data) {
+            public ApiResponse error(String code, String message, Object data) {
                 return build(code, message, data);
             }
 
-            private <T> ApiResponse<T> build(ApiCode apiCode, T data) {
+            private ApiResponse build(ApiCode apiCode, Object data) {
                 return build(apiCode.code(), apiCode.message(), data);
             }
 
-            private <T> ApiResponse<T> build(String code, String message, T data) {
-                ApiResponse<T> response = new ApiResponse<>();
+            private ApiResponse build(String code, String message, Object data) {
+                DefaultApiResponse<Object> response = new DefaultApiResponse<>();
                 response.setCode(code);
                 response.setMessage(message);
                 response.setData(data);

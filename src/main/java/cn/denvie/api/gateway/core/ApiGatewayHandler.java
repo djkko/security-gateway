@@ -68,7 +68,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     public void handle(HttpServletRequest request, HttpServletResponse response) {
         String apiName = request.getParameter(ApiParam.API_NAME);
         String apiParams = request.getParameter(ApiParam.API_PARAMS);
-        ApiResponse<?> result;
+        ApiResponse apiResponse;
         ApiRegisterCenter.ApiRunnable apiRunnable;
         ApiRequest apiRequest = null;
         ApiToken apiToken = null;
@@ -92,28 +92,28 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
             Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
             logger.info("请求接口【" + apiName + "】, 参数=" + apiRequest.getParams());
-            result = responseService.success(apiRunnable.run(args));
+            apiResponse = responseService.success(apiRunnable.run(args));
         } catch (ApiException e) {
             if (apiRequest != null) {
                 apiParams = apiRequest.getParams();
             }
             logger.error("调用接口【" + apiName + "】异常，" + e.getMessage() + "，参数=" + apiParams/*, e*/);
-            result = responseService.error(e.getCode(), e.getMessage(), null);
+            apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
         } catch (InvocationTargetException e) {
             if (apiRequest != null) {
                 apiParams = apiRequest.getParams();
             }
             logger.error("调用接口【" + apiName + "】异常，" + e.getMessage() + "，参数=" + apiParams/*, e.getTargetException()*/);
             ApiException apiException = new ApiException(e.getMessage());
-            result = responseService.error(apiException.getCode(), apiException.getMessage(), null);
+            apiResponse = responseService.error(apiException.getCode(), apiException.getMessage(), null);
         } catch (Exception e) {
             logger.error("其他异常", e);
             ApiException apiException = new ApiException(e.getMessage());
-            result = responseService.error(apiException.getCode(), apiException.getMessage(), null);
+            apiResponse = responseService.error(apiException.getCode(), apiException.getMessage(), null);
         }
 
         // 统一返回结果
-        returnResult(result, response);
+        returnResult(apiResponse, response);
     }
 
     // 根据HttpServletRequest构建Api请求参数

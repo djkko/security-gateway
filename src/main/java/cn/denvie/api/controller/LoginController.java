@@ -27,7 +27,7 @@ public class LoginController {
     private ResponseService responseService;
 
     @PostMapping("/login")
-    public ApiResponse<ApiToken> login(String username, String password, String clientType,
+    public ApiResponse login(String username, String password, String clientType,
                                        String clientCode, HttpServletRequest request) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             return responseService.error(ApiCode.LOGIN_ERROR.code(),

@@ -2,7 +2,6 @@ package cn.denvie.api.gateway.common;
 
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.MD5Utils;
-import cn.denvie.api.gateway.utils.RSAUtils;
 
 import java.net.URLEncoder;
 

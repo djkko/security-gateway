@@ -10,10 +10,10 @@ import cn.denvie.api.gateway.common.ApiResponse;
  */
 public interface ResponseService {
 
-    <T> ApiResponse<T> success(T data);
+    ApiResponse success(Object data);
 
-    <T> ApiResponse<T> success(String code, String message, T data);
+    ApiResponse success(String code, String message, Object data);
 
-    <T> ApiResponse<T> error(String code, String message, T data);
+    ApiResponse error(String code, String message, Object data);
 
 }
