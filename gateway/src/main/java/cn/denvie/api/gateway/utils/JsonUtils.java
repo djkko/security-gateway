@@ -23,7 +23,7 @@ public class JsonUtils {
         ObjectMapper result = new ObjectMapper();
         result.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         result.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-        result.setSerializationInclusion(Include.NON_NULL);
+        // result.setSerializationInclusion(Include.NON_NULL);
         result.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         result.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
         return result;

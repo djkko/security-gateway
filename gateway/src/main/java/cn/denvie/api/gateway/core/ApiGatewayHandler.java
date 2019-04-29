@@ -8,7 +8,6 @@ import cn.denvie.api.gateway.service.TokenService;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.JsonUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -47,9 +46,9 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     @Autowired
     private SignatureService signatureService;
     @Autowired
-    ApiProperties apiProperties;
-    @Autowired
     InvokExceptionHandler invokExceptionHandler;
+    @Autowired
+    ApiProperties apiProperties;
 
     private ParameterNameDiscoverer parameterUtils;
     private ApiRegisterCenter apiRegisterCenter;
@@ -336,8 +335,6 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
     private void returnResult(Object result, HttpServletResponse response) {
         try {
-            JsonUtils.getObjectMapper().configure(
-                    SerializationFeature.WRITE_NULL_MAP_VALUES, true);
             String json = JsonUtils.writeValueAsString(result);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json;charset=utf-8");
@@ -348,7 +345,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                 response.getWriter().write(json);
             }
         } catch (IOException e) {
-            logger.error("服务中心响应异常", e);
+            logger.error("服务器响应异常", e);
             throw new RuntimeException(e);
         }
     }
