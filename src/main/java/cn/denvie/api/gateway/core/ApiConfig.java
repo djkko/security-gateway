@@ -48,12 +48,12 @@ public class ApiConfig {
     /**
      * 允许的客户端请求时间与服务端时间差
      */
-    public static final long TIMESTAMP_DIFFER = 10 * 60 * 1000;
+    public static final long TIMESTAMP_DIFFER = 15 * 60 * 1000;
 
     /**
      * Token的有效期（毫秒）
      */
-    public static final long TOKEN_VAlID_TIME = 7 * 24 * 3600 * 1000;
+    public static final long TOKEN_VAlID_TIME = 14 * 24 * 3600 * 1000;
 
     ///////////////////////////////////////////////////////////////////////////
     // Default Service Implement
