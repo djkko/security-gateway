@@ -1,12 +1,11 @@
 package cn.denvie.api.controller;
 
 import cn.denvie.api.bean.User;
-import cn.denvie.api.gateway.common.ApiCode;
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.common.TokenParam;
 import cn.denvie.api.gateway.core.ApiToken;
+import cn.denvie.api.gateway.service.ApiTokenService;
 import cn.denvie.api.gateway.service.ResponseService;
-import cn.denvie.api.gateway.service.TokenService;
 import cn.denvie.api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.NoSuchAlgorithmException;
 
 @RestController
 public class LoginController {
@@ -22,7 +20,7 @@ public class LoginController {
     @Autowired
     private UserService userService;
     @Autowired
-    private TokenService tokenService;
+    private ApiTokenService apiTokenService;
     @Autowired
     private ResponseService responseService;
 
@@ -30,32 +28,31 @@ public class LoginController {
     public ApiResponse login(String username, String password, String clientType,
                                        String clientCode, HttpServletRequest request) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
-            return responseService.error(ApiCode.LOGIN_ERROR.code(),
-                    ApiCode.LOGIN_ERROR.message(), null);
+            return responseService.error("110000","用户名或密码错误", null);
         }
 
         User user = userService.login(username, password);
         if (user == null) {
-            return responseService.error(ApiCode.LOGIN_UNEXIST.code(),
-                    ApiCode.LOGIN_UNEXIST.message(), null);
+            return responseService.error("110001","用户不存在", null);
         }
 
         TokenParam param = new TokenParam();
-        param.setMemberId(user.getMemberId());
+        param.setUserId(user.getMemberId());
         param.setClientType(clientType);
         param.setClientCode(clientCode);
         param.setClientIp(request.getRemoteAddr());
-        param.setClientUserCode(user.getUsername());
+        param.setUserName(user.getUsername());
+        param.setExt1("扩展参数1");
+        param.setExt2("扩展参数2");
 
         try {
-            ApiToken  apiToken = tokenService.createToken(param);
+            ApiToken  apiToken = apiTokenService.createToken(param);
             // 私钥不发送给客户端
-            apiToken.setPrivateScret("");
+            apiToken.setPrivateSecret("");
             return responseService.success(apiToken);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            return responseService.error(ApiCode.COMMON_ERROR.code(),
-                    "生成密钥失败", null);
+            return responseService.error("110002","生成密钥失败", null);
         }
     }
 

@@ -1,9 +1,8 @@
 package cn.denvie.api.gateway.service;
 
+import cn.denvie.api.gateway.common.ApiException;
 import cn.denvie.api.gateway.common.TokenParam;
 import cn.denvie.api.gateway.core.ApiToken;
-
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Token服务。
@@ -11,7 +10,7 @@ import java.security.NoSuchAlgorithmException;
  * @author DengZhaoyong
  * @version 1.0.0
  */
-public interface TokenService {
+public interface ApiTokenService {
 
     /**
      * 生成Token并持久化存储。
@@ -19,7 +18,7 @@ public interface TokenService {
      * @param param 参数
      * @return ApiToken
      */
-    ApiToken createToken(TokenParam param) throws NoSuchAlgorithmException;
+    ApiToken createToken(TokenParam param) throws ApiException;
 
     /**
      * 根据token获取对应的ApiToken实例。

@@ -9,19 +9,28 @@ package cn.denvie.api.gateway.common;
 public class ApiException extends Exception {
 
     private String code;
+    private String desc;
 
     public ApiException(ApiCode apiCode) {
-        super(apiCode.message());
         this.code = apiCode.code();
+        this.desc = apiCode.message();
     }
 
-    public ApiException(String message) {
-        super(message);
-        code = ApiCode.COMMON_ERROR.code();
+    public ApiException(String desc) {
+        this.code = ApiCode.FAILURE.code();
+        this.desc = desc;
+    }
+
+    public ApiException(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     public String getCode() {
         return code;
     }
 
+    public String getDesc() {
+        return desc;
+    }
 }

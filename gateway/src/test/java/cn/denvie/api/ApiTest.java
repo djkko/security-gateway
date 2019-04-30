@@ -66,7 +66,7 @@ public class ApiTest {
 
         System.out.println("name：" + apiName);
         System.out.println("params：" + params);
-        System.out.println("paramsEncode：" + paramsEncode);
+        System.out.println("paramsEncoded：" + paramsEncode);
         System.out.println("token：" + accessToken);
         System.out.println("secret：" + secret);
         System.out.println("clientType：" + "android");

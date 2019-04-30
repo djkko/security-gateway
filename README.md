@@ -7,7 +7,36 @@
 调用方也可通过实现SignatureService接口的@Service自定义规则。
 
 #### 用法
-在Spring管理的Bean的方法上添加@ApiMapping注解，即可对外暴露一个接口。
+(1). 创建数据库
+```
+CREATE DATABASE `api-gateway` CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
+```
+
+(2). 在配置文件中配置数据源
+```
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.database-platform=org.hibernate.dialect.MySQL5Dialect
+
+## data source config, use HikariDataSource
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/api-gateway?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2B8
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.type=com.zaxxer.hikari.HikariDataSource
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.maximum-pool-size=50
+spring.datasource.hikari.auto-commit=true
+spring.datasource.hikari.idle-timeout=300000
+spring.datasource.hikari.connection-timeout=300000
+spring.datasource.hikari.max-lifetime=18000000
+spring.datasource.hikari.pool-name=HikariCp4HikeApi
+spring.datasource.hikari.connection-test-query=SELECT 1
+```
+
+(3). 在用户登录、注册过程中，调用ApiTokenService创建一个ApiToken，并将accessToken、secret、expireTime一并返回给客户端。
+
+(4). 在Spring管理的Bean的方法上添加@ApiMapping注解，即可对外暴露一个接口。
 ```
 @Service
 public class UserServiceImpl implements UserService {
@@ -47,27 +76,6 @@ cn.denvie.api.timestampDiffer=900000
 cn.denvie.api.checkDevice=true
 ## Token的有效期（毫秒）
 cn.denvie.api.tokenValidTime=1209600000
-```
-
-#### 自定义Token管理TokenService的实现
-```
-import cn.denvie.api.gateway.common.TokenParam;
-import cn.denvie.api.gateway.core.ApiToken;
-import java.security.NoSuchAlgorithmException;
-import org.springframework.stereotype.Service;
-
-@Service
-public class TokenServiceImpl implements TokenService {
-    @Override
-    public ApiToken createToken(TokenParam param) throws NoSuchAlgorithmException {
-        return null;
-    }
-
-    @Override
-    public ApiToken getToken(String token) {
-        return null;
-    }
-}
 ```
 
 #### 自定义接口调用结果ResponseService的实现

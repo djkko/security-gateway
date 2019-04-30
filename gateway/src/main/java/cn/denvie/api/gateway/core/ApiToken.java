@@ -1,5 +1,6 @@
 package cn.denvie.api.gateway.core;
 
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -8,19 +9,40 @@ import java.io.Serializable;
  * @author DengZhaoyong
  * @version 1.0.0
  */
+@Entity
+@Table(name = "api_token",
+        indexes = {@Index(columnList = "accessToken")})
 public class ApiToken implements Serializable {
 
+    private static final long serialVersionUID = 5223827895858062476L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;                // 表主键，自增长
-    private String memberId;        // 会员ID
+    @Column(length = 32, nullable = false)
+    private String userId;          // 用户Id
+    @Column(length = 128, nullable = false)
+    private String userName;        // 用户名
+    @Column(length = 64, nullable = false, unique = true)
     private String accessToken;     // 访问Token
+    @Column(length = 256)
     private String secret;          // 发送给客户端的密钥，如AES的密钥、RSA的公钥
-    private String privateScret;    // 私钥
+    @Column(length = 1024)
+    private String privateSecret;   // 私钥
+    @Column(length = 32)
     private String clientIp;        // 客户端IP
+    @Column(length = 32, nullable = false)
     private String clientType;      // 客户端类别，android、ios、web...
+    @Column(length = 128, nullable = false)
     private String clientCode;      // 设备唯一标识
-    private String clientUserCode;  // 设备用户标识
-    private long createTime;       // 创建时间
-    private long expireTime;       // 失效时间
+    @Column
+    private long createTime;        // 创建时间
+    @Column
+    private long expireTime;        // 失效时间
+    @Column(length = 128)
+    private String ext1;            // 扩展参数1
+    @Column(length = 128)
+    private String ext2;            // 扩展参数2
 
     public long getId() {
         return id;
@@ -30,12 +52,12 @@ public class ApiToken implements Serializable {
         this.id = id;
     }
 
-    public String getMemberId() {
-        return memberId;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setMemberId(String memberId) {
-        this.memberId = memberId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getAccessToken() {
@@ -54,12 +76,12 @@ public class ApiToken implements Serializable {
         this.secret = secret;
     }
 
-    public String getPrivateScret() {
-        return privateScret;
+    public String getPrivateSecret() {
+        return privateSecret;
     }
 
-    public void setPrivateScret(String privateScret) {
-        this.privateScret = privateScret;
+    public void setPrivateSecret(String privateSecret) {
+        this.privateSecret = privateSecret;
     }
 
     public String getClientIp() {
@@ -86,12 +108,12 @@ public class ApiToken implements Serializable {
         this.clientCode = clientCode;
     }
 
-    public String getClientUserCode() {
-        return clientUserCode;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setClientUserCode(String clientUserCode) {
-        this.clientUserCode = clientUserCode;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public long getCreateTime() {
@@ -108,5 +130,21 @@ public class ApiToken implements Serializable {
 
     public void setExpireTime(long expireTime) {
         this.expireTime = expireTime;
+    }
+
+    public String getExt1() {
+        return ext1;
+    }
+
+    public void setExt1(String ext1) {
+        this.ext1 = ext1;
+    }
+
+    public String getExt2() {
+        return ext2;
+    }
+
+    public void setExt2(String ext2) {
+        this.ext2 = ext2;
     }
 }

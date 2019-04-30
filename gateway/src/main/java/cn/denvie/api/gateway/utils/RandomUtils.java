@@ -28,8 +28,7 @@ public class RandomUtils {
      * 生成16位密钥。
      */
     public static String generateSecret() {
-        String uuid = UUID.randomUUID().toString().replace("-", "");
-        return MD5Utils.md5(uuid, 16);
+        return MD5Utils.md5(generateUuid(), 16);
     }
 
     /**
@@ -51,7 +50,7 @@ public class RandomUtils {
      */
     public static String generateToken() {
         // 生成UUID
-        String uuid = UUID.randomUUID().toString().replace("-", "");
+        String uuid = generateUuid();
         // 生成8位随机数盐
         String salt = generateShortUuid();
         return uuid + salt;

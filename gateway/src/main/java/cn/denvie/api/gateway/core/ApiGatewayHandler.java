@@ -1,10 +1,10 @@
 package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
+import cn.denvie.api.gateway.service.ApiTokenService;
 import cn.denvie.api.gateway.service.InvokExceptionHandler;
 import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.gateway.service.SignatureService;
-import cn.denvie.api.gateway.service.TokenService;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.JsonUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
@@ -40,7 +40,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private static final Logger logger = LoggerFactory.getLogger(ApiGatewayHandler.class);
 
     @Autowired
-    private TokenService tokenService;
+    private ApiTokenService apiTokenService;
     @Autowired
     private ResponseService responseService;
     @Autowired
@@ -88,7 +88,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             // 登录验证
             if (apiRunnable.getApiMapping().needLogin()) {
                 if (!apiRequest.isLogin()) {
-                    throw new ApiException(ApiCode.UN_LOGIN);
+                    throw new ApiException(ApiCode.TOKEN_UN_LOGIN);
                 }
             }
 
@@ -99,20 +99,19 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             if (apiRequest != null) {
                 apiParams = apiRequest.getParams();
             }
-            logger.error("调用接口【" + apiName + "】异常，" + e.getMessage() + "，参数=" + apiParams/*, e*/);
-            apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
+            logger.error("调用接口【" + apiName + "】异常，" + e.getDesc() + "，参数=" + apiParams/*, e*/);
+            apiResponse = responseService.error(e.getCode(), e.getDesc(), null);
         } catch (InvocationTargetException e) {
             if (apiRequest != null) {
                 apiParams = apiRequest.getParams();
             }
-            String errMsg = e.getTargetException() == null ?
-                    e.toString() : e.getTargetException().getMessage();
+            Throwable t = e.getTargetException() == null ? e : e.getTargetException();
+            String errMsg = t.getMessage();
             logger.error("调用接口【" + apiName + "】异常，" + errMsg + "，参数=" + apiParams/*, e.getTargetException()*/);
-            apiResponse = invokExceptionHandler.handle(apiRequest, e.getTargetException());
+            apiResponse = invokExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
             logger.error("其他异常", e);
-            ApiException apiException = new ApiException(e.getMessage());
-            apiResponse = responseService.error(apiException.getCode(), apiException.getMessage(), null);
+            apiResponse = invokExceptionHandler.handle(apiRequest, e);
         }
 
         // 统一返回结果
@@ -156,7 +155,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     // 验证Token
     private ApiToken checkToken(ApiRequest request, boolean needLogin) throws ApiException {
         // 验证Token
-        ApiToken token = tokenService.getToken(request.getAccessToken());
+        ApiToken token = apiTokenService.getToken(request.getAccessToken());
         if (token == null) {
             if (needLogin) {
                 throw new ApiException(ApiCode.CHECK_TOKEN_NULL);
@@ -171,12 +170,12 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }
 
         // 注入用户信息
-        request.setMemberId(token.getMemberId());
+        request.setMemberId(token.getUserId());
         request.setLogin(true);
 
         // 注入密钥
         request.setSecret(token.getSecret());
-        request.setPrivateScret(token.getPrivateScret());
+        request.setPrivateScret(token.getPrivateSecret());
 
         return token;
     }

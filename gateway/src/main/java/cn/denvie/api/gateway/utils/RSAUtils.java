@@ -70,6 +70,14 @@ public class RSAUtils {
     }
 
     /**
+     * 生成RSA公私密钥对。
+     * 私钥的key为{@link RSAUtils#KEY_PRIVATE private}，公钥的key为{@link RSAUtils#KEY_PUBLIC public}。
+     */
+    public static Map<String, String> generateRSAKeyBase64() throws NoSuchAlgorithmException {
+        return generateRSAKeyBase64(512);
+    }
+
+    /**
      * 公钥加密。
      *
      * @param rsaPublicKey 公钥byte[]
