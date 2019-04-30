@@ -1,6 +1,7 @@
 package cn.denvie.api.controller;
 
 import cn.denvie.api.bean.User;
+import cn.denvie.api.gateway.common.ApiException;
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.common.TokenParam;
 import cn.denvie.api.gateway.core.ApiToken;
@@ -50,9 +51,8 @@ public class LoginController {
             // 私钥不发送给客户端
             apiToken.setPrivateSecret("");
             return responseService.success(apiToken);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return responseService.error("110002","生成密钥失败", null);
+        } catch (ApiException e) {
+            return responseService.error(e.getCode(),e.getDesc(), null);
         }
     }
 

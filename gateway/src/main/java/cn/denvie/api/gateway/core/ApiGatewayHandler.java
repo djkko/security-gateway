@@ -162,7 +162,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             }
             return null;
         }
-        if (new Date(token.getExpireTime()).before(new Date())) {
+        if (token.isExpired()) {
             if (needLogin) {
                 throw new ApiException(ApiCode.CHECK_TOKEN_INVALID);
             }

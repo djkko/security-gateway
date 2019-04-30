@@ -1,9 +1,6 @@
 package cn.denvie.api.gateway.service;
 
-import cn.denvie.api.gateway.common.ApiCode;
-import cn.denvie.api.gateway.common.ApiException;
-import cn.denvie.api.gateway.common.EnctyptType;
-import cn.denvie.api.gateway.common.TokenParam;
+import cn.denvie.api.gateway.common.*;
 import cn.denvie.api.gateway.core.ApiProperties;
 import cn.denvie.api.gateway.core.ApiToken;
 import cn.denvie.api.gateway.repository.ApiTokenRepository;
@@ -15,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.transaction.Transactional;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +24,7 @@ import java.util.Map;
  * @version 1.1.0
  */
 @Service
+@Transactional
 public class ApiTokenServiceImpl implements ApiTokenService {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiTokenService.class);
@@ -38,22 +38,35 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     public ApiToken createToken(TokenParam param) throws ApiException {
         logger.debug("Create ApiToken, param = " + param);
 
-        // 生成Token的参数校验
-        if (param == null) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_NULL);
-        } else if (StringUtils.isEmpty(param.getUserId())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_USER_ID_NULL);
-        } else if (StringUtils.isEmpty(param.getUserName())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_USER_NAME_NULL);
-        } else if (StringUtils.isEmpty(param.getClientType())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_TYPE_NULL);
-        } else if (StringUtils.isEmpty(param.getClientCode())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_CODE_NULL);
-        }
+        // 参数校验
+        validateTokenParam(param);
 
-        // 根据用户Id、设备类型、设备标识查找ApiToken
-        ApiToken apiToken = apiTokenRepository.findByUserIdAndClientTypeAndClientCode(
-                param.getUserId(), param.getClientType(), param.getClientCode());
+        ApiToken apiToken = null;
+
+        // 多设备登录判断
+        if (apiProperties.getMultiDeviceLogin() == MultiDeviceLogin.REPLACE) {
+            // 删除原有ApiToken数据
+            int deleteCount = apiTokenRepository.deleteByUserIdEquals(param.getUserId());
+            logger.debug("delete ApiToken count: " + deleteCount);
+        } else if (apiProperties.getMultiDeviceLogin() == MultiDeviceLogin.REFUSE) {
+            boolean isAlreadyLogin = false;
+            List<ApiToken> allApiTokens = apiTokenRepository.findAllByUserId(param.getUserId());
+            if (allApiTokens != null && !allApiTokens.isEmpty()) {
+                for (ApiToken at : allApiTokens) {
+                    if (!at.isExpired()) {
+                        isAlreadyLogin = true;
+                        break;
+                    }
+                }
+            }
+            if (isAlreadyLogin) {
+                throw new ApiException(ApiCode.TOKEN_DUPLICATE_LOGIN);
+            }
+        } else {
+            // 根据用户Id、设备类型、设备标识查找ApiToken
+            apiToken = apiTokenRepository.findByUserIdAndClientTypeAndClientCode(
+                    param.getUserId(), param.getClientType(), param.getClientCode());
+        }
 
         if (apiToken == null) {
             apiToken = new ApiToken();
@@ -95,6 +108,20 @@ public class ApiTokenServiceImpl implements ApiTokenService {
         }
 
         return apiToken;
+    }
+
+    private void validateTokenParam(TokenParam param) throws ApiException {
+        if (param == null) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_NULL);
+        } else if (StringUtils.isEmpty(param.getUserId())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_USER_ID_NULL);
+        } else if (StringUtils.isEmpty(param.getUserName())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_USER_NAME_NULL);
+        } else if (StringUtils.isEmpty(param.getClientType())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_TYPE_NULL);
+        } else if (StringUtils.isEmpty(param.getClientCode())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_CODE_NULL);
+        }
     }
 
     @Override

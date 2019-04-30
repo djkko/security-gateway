@@ -1,6 +1,7 @@
 package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.EnctyptType;
+import cn.denvie.api.gateway.common.MultiDeviceLogin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -32,6 +33,10 @@ public class ApiProperties {
      * Token的有效期（毫秒）
      */
     private long tokenValidTime = ApiConfig.TOKEN_VAlID_TIME;
+    /**
+     * 多设备登录策略
+     */
+    private MultiDeviceLogin multiDeviceLogin = ApiConfig.MULTI_DEVICE_LOGIN;
 
     public EnctyptType getEnctyptType() {
         return enctyptType;
@@ -71,5 +76,13 @@ public class ApiProperties {
 
     public void setTokenValidTime(long tokenValidTime) {
         this.tokenValidTime = tokenValidTime;
+    }
+
+    public MultiDeviceLogin getMultiDeviceLogin() {
+        return multiDeviceLogin;
+    }
+
+    public void setMultiDeviceLogin(MultiDeviceLogin multiDeviceLogin) {
+        this.multiDeviceLogin = multiDeviceLogin;
     }
 }

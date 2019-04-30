@@ -1,9 +1,6 @@
 package cn.denvie.api.gateway.core;
 
-import cn.denvie.api.gateway.common.ApiCode;
-import cn.denvie.api.gateway.common.ApiResponse;
-import cn.denvie.api.gateway.common.DefaultApiResponse;
-import cn.denvie.api.gateway.common.EnctyptType;
+import cn.denvie.api.gateway.common.*;
 import cn.denvie.api.gateway.service.InvokExceptionHandler;
 import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.gateway.service.SignatureService;
@@ -48,6 +45,11 @@ public class ApiConfig {
      * Token的有效期（毫秒）
      */
     public static final long TOKEN_VAlID_TIME = 14 * 24 * 3600 * 1000;
+
+    /**
+     * 多设备登录策略
+     */
+    public static final MultiDeviceLogin MULTI_DEVICE_LOGIN = MultiDeviceLogin.ALLOW;
 
     ///////////////////////////////////////////////////////////////////////////
     // Default Service Implement
@@ -108,8 +110,14 @@ public class ApiConfig {
                 String secret = param.getSecret();
                 String params = param.getParams();
                 String timestamp = param.getTimestamp();
-                String key = secret + apiName + params + accessToken + timestamp + secret;
-                return MD5Utils.md5(key).toUpperCase();
+                StringBuilder keyBuilder = new StringBuilder();
+                keyBuilder.append(secret)
+                        .append(apiName)
+                        .append(params)
+                        .append(accessToken)
+                        .append(timestamp)
+                        .append(secret);
+                return MD5Utils.md5(keyBuilder.toString()).toUpperCase();
             }
         };
     }

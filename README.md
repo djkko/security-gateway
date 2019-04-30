@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
 @ApiMapping的属性说明：  
 value：接口名，需全局唯一  
 needLogin：是否需要登录鉴权  
-needParams：接口是否有参数  
+needParams：参数是否做判空校验  
 
 接口的调用格式为：  
 http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"aa123456"}&token=3343fd1f23544c19a622d1a3dae52fd3&clientType=android&clientCode=LO290DAL183K&timestamp=1556442217873&sign=BE16798DBA1561A8AD369C0438AEE5A0  
@@ -76,6 +76,8 @@ cn.denvie.api.timestampDiffer=900000
 cn.denvie.api.checkDevice=true
 ## Token的有效期（毫秒）
 cn.denvie.api.tokenValidTime=1209600000
+## 多设备登录策略：ALLOW、REPLACE、REFUSE
+cn.denvie.api.multiDeviceLogin=ALLOW
 ```
 
 #### 自定义接口调用结果ResponseService的实现

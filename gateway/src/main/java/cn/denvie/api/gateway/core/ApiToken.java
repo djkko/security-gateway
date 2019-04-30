@@ -2,6 +2,7 @@ package cn.denvie.api.gateway.core;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * ApiToken实体Bean。
@@ -10,8 +11,7 @@ import java.io.Serializable;
  * @version 1.0.0
  */
 @Entity
-@Table(name = "api_token",
-        indexes = {@Index(columnList = "accessToken")})
+@Table(indexes = {@Index(columnList = "accessToken")})
 public class ApiToken implements Serializable {
 
     private static final long serialVersionUID = 5223827895858062476L;
@@ -43,6 +43,14 @@ public class ApiToken implements Serializable {
     private String ext1;            // 扩展参数1
     @Column(length = 128)
     private String ext2;            // 扩展参数2
+
+    /**
+     * 判断Token是否已过期。
+     */
+    @Transient
+    public boolean isExpired() {
+        return new Date(expireTime).before(new Date());
+    }
 
     public long getId() {
         return id;
