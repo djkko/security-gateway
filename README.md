@@ -68,6 +68,12 @@ sign：参数签名
 ```
 ## 参数加密方式，目前支持：Base64、AES、RSA
 cn.denvie.api.enctyptType=AES
+## AES加密算法密钥（16位），若不配置，则自动生成
+cn.denvie.api.aesKey=
+## RSA加密算法公钥，若不配置，则自动生成
+cn.denvie.api.rsaPublicKey=
+## RSA加密算法私钥，若不配置，则自动生成
+cn.denvie.api.rsaPrivateKey=
 ## 是否启用客户端与服务端时间差校验
 cn.denvie.api.ckeckTimestamp=true
 ## 允许的客户端请求时间与服务端时间差

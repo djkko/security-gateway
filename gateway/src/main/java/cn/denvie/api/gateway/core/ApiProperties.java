@@ -37,6 +37,18 @@ public class ApiProperties {
      * 多设备登录策略
      */
     private MultiDeviceLogin multiDeviceLogin = ApiConfig.MULTI_DEVICE_LOGIN;
+    /**
+     * AES加密算法密钥（16位），若不配置，则自动生成
+     */
+    private String aesKey = null;
+    /**
+     * RSA加密算法公钥，若不配置，则自动生成
+     */
+    private String rsaPublicKey = null;
+    /**
+     * RSA加密算法私钥，若不配置，则自动生成
+     */
+    private String rsaPrivateKey = null;
 
     public EnctyptType getEnctyptType() {
         return enctyptType;
@@ -84,5 +96,29 @@ public class ApiProperties {
 
     public void setMultiDeviceLogin(MultiDeviceLogin multiDeviceLogin) {
         this.multiDeviceLogin = multiDeviceLogin;
+    }
+
+    public String getAesKey() {
+        return aesKey;
+    }
+
+    public void setAesKey(String aesKey) {
+        this.aesKey = aesKey;
+    }
+
+    public String getRsaPublicKey() {
+        return rsaPublicKey;
+    }
+
+    public void setRsaPublicKey(String rsaPublicKey) {
+        this.rsaPublicKey = rsaPublicKey;
+    }
+
+    public String getRsaPrivateKey() {
+        return rsaPrivateKey;
+    }
+
+    public void setRsaPrivateKey(String rsaPrivateKey) {
+        this.rsaPrivateKey = rsaPrivateKey;
     }
 }

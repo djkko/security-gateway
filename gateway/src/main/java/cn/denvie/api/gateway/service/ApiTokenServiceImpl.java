@@ -41,9 +41,65 @@ public class ApiTokenServiceImpl implements ApiTokenService {
         // 参数校验
         validateTokenParam(param);
 
-        ApiToken apiToken = null;
+        // 多设备登录检测
+        ApiToken apiToken = checkMultiDeviceLogin(param);
 
-        // 多设备登录判断
+        if (apiToken == null) {
+            apiToken = new ApiToken();
+            apiToken.setUserId(param.getUserId());
+            apiToken.setClientType(param.getClientType());
+            apiToken.setClientCode(param.getClientCode());
+            apiToken.setCreateTime(System.currentTimeMillis());
+        }
+
+        apiToken.setUserName(param.getUserName());
+        apiToken.setAccessToken(RandomUtils.generateUuid());
+        apiToken.setClientIp(param.getClientIp());
+        apiToken.setExpireTime(System.currentTimeMillis() + apiProperties.getTokenValidTime());
+        apiToken.setExt1(param.getExt1());
+        apiToken.setExt2(param.getExt2());
+
+        // 生成密钥
+        generateSecretKey(apiToken);
+
+        // 保存到数据库
+        try {
+            apiTokenRepository.save(apiToken);
+        } catch (Exception e) {
+            logger.error(ApiCode.TOKEN_SAVE_TO_DB_ERROR.message(), e);
+            throw new ApiException(ApiCode.TOKEN_SAVE_TO_DB_ERROR);
+        }
+
+        logger.debug("Create ApiToken Success, token = " + apiToken.getAccessToken());
+
+        return apiToken;
+    }
+
+    @Override
+    public ApiToken getToken(String token) {
+        return apiTokenRepository.findByAccessToken(token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Private Method
+    ///////////////////////////////////////////////////////////////////////////
+
+    private void validateTokenParam(TokenParam param) throws ApiException {
+        if (param == null) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_NULL);
+        } else if (StringUtils.isEmpty(param.getUserId())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_USER_ID_NULL);
+        } else if (StringUtils.isEmpty(param.getUserName())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_USER_NAME_NULL);
+        } else if (StringUtils.isEmpty(param.getClientType())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_TYPE_NULL);
+        } else if (StringUtils.isEmpty(param.getClientCode())) {
+            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_CODE_NULL);
+        }
+    }
+
+    private ApiToken checkMultiDeviceLogin(TokenParam param) throws ApiException {
+        ApiToken apiToken = null;
         if (apiProperties.getMultiDeviceLogin() == MultiDeviceLogin.REPLACE) {
             // 删除原有ApiToken数据，挤掉原来的登录信息
             int deleteCount = apiTokenRepository.deleteByUserIdEquals(param.getUserId());
@@ -69,66 +125,36 @@ public class ApiTokenServiceImpl implements ApiTokenService {
             apiToken = apiTokenRepository.findByUserIdAndClientTypeAndClientCode(
                     param.getUserId(), param.getClientType(), param.getClientCode());
         }
-
-        if (apiToken == null) {
-            apiToken = new ApiToken();
-            apiToken.setUserId(param.getUserId());
-            apiToken.setClientType(param.getClientType());
-            apiToken.setClientCode(param.getClientCode());
-            apiToken.setCreateTime(System.currentTimeMillis());
-        }
-
-        apiToken.setUserName(param.getUserName());
-        apiToken.setAccessToken(RandomUtils.generateUuid());
-        apiToken.setClientIp(param.getClientIp());
-        apiToken.setExpireTime(System.currentTimeMillis() + apiProperties.getTokenValidTime());
-        apiToken.setExt1(param.getExt1());
-        apiToken.setExt2(param.getExt2());
-
-        // 生成密钥
-        if (apiProperties.getEnctyptType() == EnctyptType.AES) {
-            apiToken.setSecret(RandomUtils.generateSecret());
-        } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
-            try {
-                Map<String, String> keyMap = RSAUtils.generateRSAKeyBase64();
-                String privateKey = keyMap.get(RSAUtils.KEY_PRIVATE);
-                String publicKey = keyMap.get(RSAUtils.KEY_PUBLIC);
-                apiToken.setSecret(publicKey);
-                apiToken.setPrivateSecret(privateKey);
-            } catch (NoSuchAlgorithmException e) {
-                logger.error(ApiCode.TOKEN_SECRET_KEY_CREATE_ERROR.message(), e);
-                throw new ApiException(ApiCode.TOKEN_SECRET_KEY_CREATE_ERROR);
-            }
-        }
-
-        // 保存到数据库
-        try {
-            apiTokenRepository.save(apiToken);
-        } catch (Exception e) {
-            logger.error(ApiCode.TOKEN_SAVE_TO_DB_ERROR.message(), e);
-            throw new ApiException(ApiCode.TOKEN_SAVE_TO_DB_ERROR);
-        }
-
         return apiToken;
     }
 
-    private void validateTokenParam(TokenParam param) throws ApiException {
-        if (param == null) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_NULL);
-        } else if (StringUtils.isEmpty(param.getUserId())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_USER_ID_NULL);
-        } else if (StringUtils.isEmpty(param.getUserName())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_USER_NAME_NULL);
-        } else if (StringUtils.isEmpty(param.getClientType())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_TYPE_NULL);
-        } else if (StringUtils.isEmpty(param.getClientCode())) {
-            throw new ApiException(ApiCode.TOKEN_PARAM_CLIENT_CODE_NULL);
+    private void generateSecretKey(ApiToken apiToken) throws ApiException {
+        if (apiProperties.getEnctyptType() == EnctyptType.AES) {
+            // 如果没配置aesKey，则由程序生成
+            if (StringUtils.isEmpty(apiProperties.getAesKey())) {
+                apiToken.setSecret(RandomUtils.generateSecret());
+            } else {
+                apiToken.setSecret(apiProperties.getAesKey());
+            }
+        } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
+            // 如果没配置rsaPublicKey和rsaPrivateKey，则由程序生成
+            if (StringUtils.isEmpty(apiProperties.getRsaPublicKey())
+                    || StringUtils.isEmpty(apiProperties.getRsaPrivateKey())) {
+                try {
+                    Map<String, String> keyMap = RSAUtils.generateRSAKeyBase64();
+                    String privateKey = keyMap.get(RSAUtils.KEY_PRIVATE);
+                    String publicKey = keyMap.get(RSAUtils.KEY_PUBLIC);
+                    apiToken.setSecret(publicKey);
+                    apiToken.setPrivateSecret(privateKey);
+                } catch (NoSuchAlgorithmException e) {
+                    logger.error(ApiCode.TOKEN_SECRET_KEY_CREATE_ERROR.message(), e);
+                    throw new ApiException(ApiCode.TOKEN_SECRET_KEY_CREATE_ERROR);
+                }
+            } else {
+                apiToken.setSecret(apiProperties.getRsaPublicKey());
+                apiToken.setPrivateSecret(apiProperties.getRsaPrivateKey());
+            }
         }
-    }
-
-    @Override
-    public ApiToken getToken(String token) {
-        return apiTokenRepository.findByAccessToken(token);
     }
 
 }
