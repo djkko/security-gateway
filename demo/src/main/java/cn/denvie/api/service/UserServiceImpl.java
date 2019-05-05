@@ -23,11 +23,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User login(String username, String password) {
+    public User login(String userId, String username, String password) {
         User user = sUserMap.get(username);
         if (user == null) {
             user = new User();
-            user.setMemberId(RandomUtils.generateShortUuid());
+            String tempId = StringUtils.isEmpty(userId) ? RandomUtils.generateShortUuid() : userId;
+            user.setMemberId(tempId);
             user.setUsername(username);
             user.setPassword(password);
             sUserMap.put(username, user);
@@ -35,10 +36,14 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    @ApiMapping(value = "user_add", needParams = false)
+    @ApiMapping(value = "user_add")
     public User add(String username, String password) throws ApiException {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             throw new ApiException("用户名和密码不能为空");
+        }
+
+        if (sUserMap.get(username) != null) {
+            throw new ApiException("用户[" + username + "]已存在");
         }
 
         User user = new User();

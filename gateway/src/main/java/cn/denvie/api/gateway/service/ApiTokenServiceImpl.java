@@ -45,10 +45,11 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
         // 多设备登录判断
         if (apiProperties.getMultiDeviceLogin() == MultiDeviceLogin.REPLACE) {
-            // 删除原有ApiToken数据
+            // 删除原有ApiToken数据，挤掉原来的登录信息
             int deleteCount = apiTokenRepository.deleteByUserIdEquals(param.getUserId());
-            logger.debug("delete ApiToken count: " + deleteCount);
+            logger.debug("DELETE FROM ApiToken count: " + deleteCount);
         } else if (apiProperties.getMultiDeviceLogin() == MultiDeviceLogin.REFUSE) {
+            // 如果用户已登录，拒绝新的登录请求
             boolean isAlreadyLogin = false;
             List<ApiToken> allApiTokens = apiTokenRepository.findAllByUserId(param.getUserId());
             if (allApiTokens != null && !allApiTokens.isEmpty()) {
@@ -63,6 +64,7 @@ public class ApiTokenServiceImpl implements ApiTokenService {
                 throw new ApiException(ApiCode.TOKEN_DUPLICATE_LOGIN);
             }
         } else {
+            // 允许多台设备同时登录
             // 根据用户Id、设备类型、设备标识查找ApiToken
             apiToken = apiTokenRepository.findByUserIdAndClientTypeAndClientCode(
                     param.getUserId(), param.getClientType(), param.getClientCode());

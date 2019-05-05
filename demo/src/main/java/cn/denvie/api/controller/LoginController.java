@@ -26,13 +26,13 @@ public class LoginController {
     private ResponseService responseService;
 
     @PostMapping("/login")
-    public ApiResponse login(String username, String password, String clientType,
+    public ApiResponse login(String userId, String username, String password, String clientType,
                                        String clientCode, HttpServletRequest request) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             return responseService.error("110000","用户名或密码错误", null);
         }
 
-        User user = userService.login(username, password);
+        User user = userService.login(userId, username, password);
         if (user == null) {
             return responseService.error("110001","用户不存在", null);
         }
@@ -43,8 +43,8 @@ public class LoginController {
         param.setClientCode(clientCode);
         param.setClientIp(request.getRemoteAddr());
         param.setUserName(user.getUsername());
-        param.setExt1("扩展参数1");
-        param.setExt2("扩展参数2");
+        param.setExt1("ext1");
+        param.setExt2("ext2");
 
         try {
             ApiToken  apiToken = apiTokenService.createToken(param);

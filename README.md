@@ -76,7 +76,7 @@ cn.denvie.api.timestampDiffer=900000
 cn.denvie.api.checkDevice=true
 ## Token的有效期（毫秒）
 cn.denvie.api.tokenValidTime=1209600000
-## 多设备登录策略：ALLOW、REPLACE、REFUSE
+## 多设备登录策略：ALLOW（允许同时登录）、REPLACE（挤掉对方）、REFUSE（拒绝登录）
 cn.denvie.api.multiDeviceLogin=ALLOW
 ```
 

@@ -1,5 +1,7 @@
 package cn.denvie.api.gateway.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
@@ -11,7 +13,8 @@ import java.util.Date;
  * @version 1.0.0
  */
 @Entity
-@Table(indexes = {@Index(columnList = "accessToken")})
+@Table(indexes = {@Index(columnList = "accessToken")},
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"userId", "clientType", "clientCode"})})
 public class ApiToken implements Serializable {
 
     private static final long serialVersionUID = 5223827895858062476L;
@@ -48,6 +51,7 @@ public class ApiToken implements Serializable {
      * 判断Token是否已过期。
      */
     @Transient
+    @JsonIgnore
     public boolean isExpired() {
         return new Date(expireTime).before(new Date());
     }
