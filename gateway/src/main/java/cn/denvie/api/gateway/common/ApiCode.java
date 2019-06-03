@@ -10,6 +10,7 @@ public enum ApiCode {
 
     SUCCESS("10000", "执行成功"),
     FAILURE("99999", "执行失败"),
+    NOT_SUPPORT_METHOD("10100", "请求失败，不支持的HTTP请求类型"),
     TOKEN_PARAM_NULL("10200", "Token创建失败，‘TokenParam’参数为空"),
     TOKEN_PARAM_USER_ID_NULL("10201", "Token创建失败，‘userId’参数为空"),
     TOKEN_PARAM_USER_NAME_NULL("10202", "Token创建失败，‘userName’参数为空"),

@@ -4,6 +4,7 @@ import cn.denvie.api.bean.User;
 import cn.denvie.api.gateway.common.ApiException;
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.common.TokenParam;
+import cn.denvie.api.gateway.core.ApiRequest;
 import cn.denvie.api.gateway.core.ApiToken;
 import cn.denvie.api.gateway.service.ApiTokenService;
 import cn.denvie.api.gateway.service.ResponseService;
@@ -27,7 +28,7 @@ public class LoginController {
 
     @PostMapping("/login")
     public ApiResponse login(String userId, String username, String password, String clientType,
-                                       String clientCode, HttpServletRequest request) {
+                             String clientCode, HttpServletRequest request, ApiRequest requestaaa) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             return responseService.error("110000","用户名或密码错误", null);
         }

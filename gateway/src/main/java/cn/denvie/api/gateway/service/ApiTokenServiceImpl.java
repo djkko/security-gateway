@@ -46,13 +46,13 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
         if (apiToken == null) {
             apiToken = new ApiToken();
-            apiToken.setUserId(param.getUserId());
-            apiToken.setClientType(param.getClientType());
-            apiToken.setClientCode(param.getClientCode());
             apiToken.setCreateTime(System.currentTimeMillis());
         }
 
+        apiToken.setUserId(param.getUserId());
         apiToken.setUserName(param.getUserName());
+        apiToken.setClientType(param.getClientType());
+        apiToken.setClientCode(param.getClientCode());
         apiToken.setAccessToken(RandomUtils.generateUuid());
         apiToken.setClientIp(param.getClientIp());
         apiToken.setExpireTime(System.currentTimeMillis() + apiProperties.getTokenValidTime());

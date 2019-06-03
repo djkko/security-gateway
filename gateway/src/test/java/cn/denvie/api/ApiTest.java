@@ -6,6 +6,7 @@ import cn.denvie.api.gateway.service.SignatureService;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.util.Base64Utils;
 
@@ -22,6 +23,7 @@ public class ApiTest {
         signatureService = new ApiConfig().signatureService();
     }
 
+    @Ignore
     @Test
     public void generateBase64Params() throws Exception {
         System.out.println("========== 生成Base64请求参数 ==========");
@@ -33,17 +35,19 @@ public class ApiTest {
         generateParam(apiName, secret, accessToken, params, paramsEncode);
     }
 
+    @Ignore
     @Test
     public void generateAesParams() throws Exception {
         System.out.println("========== 生成AES请求参数 ==========");
         String apiName = "user_add";
-        String accessToken = "fe68f63f120c44cd904756a3bcacd708";
-        String secret = "bcd0d57c0a063bdc";
+        String accessToken = "d7ce0859e7954c91b448e8930e77fb8b";
+        String secret = "20188ac8c27aa644";
         String params = AESUtils.encryptToBase64("{\"username\":\"bbbb\", \"password\":\"bbbb\"}", secret);
         String paramsEncode = URLEncoder.encode(params, CHARSET);
         generateParam(apiName, secret, accessToken, params, paramsEncode);
     }
 
+    @Ignore
     @Test
     public void generateRsaParams() throws Exception {
         System.out.println("========== 生成RSA请求参数 ==========");
@@ -73,6 +77,17 @@ public class ApiTest {
         System.out.println("clientCode：" + "LO290DAL183K");
         System.out.println("timestamp：" + apiRequest.getTimestamp());
         System.out.println("sign：" + sign);
+    }
+
+    @Ignore
+    @Test
+    public void decrypt() throws Exception {
+        String key = "76833c9a79718a56";
+        String text = "{\"coinType\":\"TOP\",\"amount\":12.34,\"orderNo\":\"order-00001\",\"pushUrl\":\"http://127.0.0.1/mall/order/confirm\"}";
+        String s = AESUtils.encryptToBase64(text, key);
+        String result = AESUtils.decryptStringFromBase64("YCBXw0J4V/pyNaBUj7ctjG6G+pyO0lcWUK6Cbgb99wZI62Zjq//Tmd/Qsf+PxNWlEuGDJi1mWRoX" +
+                "Oql63pl32JUZTo/qQRWx+KwQwLaUjzUwwdEQRuQFLQDqv0q8dMmFUH7Cw5NGz1mcFc2zOLC6yw==", key);
+        System.out.println(result);
     }
 
 }

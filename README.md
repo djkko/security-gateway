@@ -51,8 +51,18 @@ value：接口名，需全局唯一
 needLogin：是否需要登录鉴权  
 needParams：参数是否做判空校验  
 
-接口的调用格式为：  
+传参方式为“FORM”时的接口的调用格式为：  
 http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"aa123456"}&token=3343fd1f23544c19a622d1a3dae52fd3&clientType=android&clientCode=LO290DAL183K&timestamp=1556442217873&sign=BE16798DBA1561A8AD369C0438AEE5A0  
+传参方式为“BODY”时的接口的调用格式为：http://localhost:8080/api，请求BODY的类型为“application/json”，BODY值格式如下：  
+{
+	"name": "user_add",
+	"params": "o+bA2FaNZXJYLmEJKTSmXbj9nnydfUYwYUFkEo/vsOQ1QMkNY9EXeqb2hTv7pns9",
+	"token": "d7ce0859e7954c91b448e8930e77fb8b",
+	"clientType": "android",
+	"clientCode": "LO290DAL183K",
+	"timestamp": "1559552986907",
+	"sign": "3758874B4E8BB86E9F01634035AE376D"
+}  
 
 参数说明如下：  
 name：@ApiMapping定义的接口名  
@@ -62,7 +72,7 @@ clientType：客户端类别，android、ios、web等
 clientCode：客户端设备唯一标识  
 timestamp：Long类型的请求时间戳  
 sign：参数签名  
-其中，token、clientType、clientCode三个参数的传值同时支持Header及Param方式，Header中取不到时，会从Param中再取一次。
+其中，传参方式为“FORM”时token、clientType、clientCode三个参数的传值同时支持Header及Param方式，Header中取不到时，会从Param中再取一次。
 
 #### API网关配置项（如不设置，则默认值为以下各项的值）
 ```
@@ -84,6 +94,8 @@ cn.denvie.api.checkDevice=true
 cn.denvie.api.tokenValidTime=1209600000
 ## 多设备登录策略：ALLOW（允许同时登录）、REPLACE（挤掉对方）、REFUSE（拒绝登录）
 cn.denvie.api.multiDeviceLogin=ALLOW
+## 传参方式：FORM、BODY，默认为：BODY
+cn.denvie.api.paramType=BODY
 ```
 
 #### 自定义接口调用结果ResponseService的实现
@@ -123,6 +135,7 @@ public class SignatureServiceImpl implements SignatureService {
     }
 }
 ```
+默认签名规则：MD5（secret + apiName + token + params + timestamp + secret）.toUpperCase()
 
 #### 自定义接口调用异常处理器InvokExceptionHandler的实现
 ```

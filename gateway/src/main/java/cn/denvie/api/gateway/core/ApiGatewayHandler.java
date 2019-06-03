@@ -67,18 +67,17 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         apiRegisterCenter.loadApiFromSpringBeans();
     }
 
-    public void handle(HttpServletRequest request, HttpServletResponse response) {
-        String apiName = request.getParameter(ApiParam.API_NAME);
-        String apiParams = request.getParameter(ApiParam.API_PARAMS);
+    public void handle(HttpServletRequest request, HttpServletResponse response, String httpMethod) {
+        ApiParam originalApiParam = resolveApiParam(request);
         ApiResponse apiResponse;
         ApiRegisterCenter.ApiRunnable apiRunnable;
         ApiRequest apiRequest = null;
         ApiToken apiToken = null;
         try {
             // 系统参数验证
-            apiRunnable = valdateSysParams(request);
+            apiRunnable = valdateSysParams(originalApiParam);
             // 构建ApiRequest
-            apiRequest = buildApiRequest(request);
+            apiRequest = buildApiRequest(originalApiParam);
             // 验证Token
             if (!StringUtils.isEmpty(apiRequest.getAccessToken())) {
                 apiToken = checkToken(apiRequest, apiRunnable.getApiMapping().needLogin());
@@ -93,21 +92,15 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             }
 
             Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
-            logger.info("请求接口【" + apiName + "】, 参数=" + apiRequest.getParams());
+            logger.info("请求接口【" + originalApiParam.getName() + "】, 参数=" + apiRequest.getParams());
             apiResponse = responseService.success(apiRunnable.run(args));
         } catch (ApiException e) {
-            if (apiRequest != null) {
-                apiParams = apiRequest.getParams();
-            }
-            logger.error("调用接口【" + apiName + "】异常，" + e.getDesc() + "，参数=" + apiParams/*, e*/);
+            logger.error("调用接口【" + originalApiParam.getName() + "】异常，" + e.getDesc() + "，参数=" + originalApiParam.getParams()/*, e*/);
             apiResponse = responseService.error(e.getCode(), e.getDesc(), null);
         } catch (InvocationTargetException e) {
-            if (apiRequest != null) {
-                apiParams = apiRequest.getParams();
-            }
             Throwable t = e.getTargetException() == null ? e : e.getTargetException();
             String errMsg = t.getMessage();
-            logger.error("调用接口【" + apiName + "】异常，" + errMsg + "，参数=" + apiParams/*, e.getTargetException()*/);
+            logger.error("调用接口【" + originalApiParam.getName() + "】异常，" + errMsg + "，参数=" + originalApiParam.getParams()/*, e.getTargetException()*/);
             apiResponse = invokExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
             logger.error("其他异常", e);
@@ -118,36 +111,33 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         returnResult(apiResponse, response);
     }
 
-    // 根据HttpServletRequest构建Api请求参数
-    private ApiRequest buildApiRequest(HttpServletRequest request) {
-        ApiRequest apiRequest = new ApiRequest();
-        apiRequest.setApiName(request.getParameter(ApiParam.API_NAME));
+    /**
+     * 解析请求参数。
+     */
+    private ApiParam resolveApiParam(HttpServletRequest request) {
+        ApiParam param = new ApiParam();
+        if (apiProperties.getParamType() == ParamType.BODY) {
+            param.inflateByBodyRequest(request);
+        } else {
+            param.inflateByFormRequest(request);
+        }
+        return param;
+    }
 
-        // params参数处理
-        String params = request.getParameter(ApiParam.API_PARAMS);
+    // 根据HttpServletRequest构建Api请求参数
+    private ApiRequest buildApiRequest(ApiParam originalApiParam) {
+        ApiRequest apiRequest = new ApiRequest();
+        apiRequest.setApiName(originalApiParam.getName());
+        String params = originalApiParam.getParams();
         if (params == null) {
             params = "";
         }
         apiRequest.setParams(params);
-
-        // Token支持Header和Param方式传值
-        apiRequest.setAccessToken(request.getHeader(ApiParam.API_TOKEN));
-        if (StringUtils.isEmpty(apiRequest.getAccessToken())) {
-            apiRequest.setAccessToken(request.getParameter(ApiParam.API_TOKEN));
-        }
-
-        // 设备类型及设备唯一标识支持Header和Param方式传值
-        apiRequest.setClientType(request.getHeader(ApiParam.API_CLIENT_TYPE));
-        if (StringUtils.isEmpty(apiRequest.getClientType())) {
-            apiRequest.setClientType(request.getParameter(ApiParam.API_CLIENT_TYPE));
-        }
-        apiRequest.setClientCode(request.getHeader(ApiParam.API_CLIENT_CODE));
-        if (StringUtils.isEmpty(apiRequest.getClientCode())) {
-            apiRequest.setClientCode(request.getParameter(ApiParam.API_CLIENT_CODE));
-        }
-
-        apiRequest.setTimestamp(request.getParameter(ApiParam.API_TIMESTAMP));
-        apiRequest.setSign(request.getParameter(ApiParam.API_SIGN));
+        apiRequest.setAccessToken(originalApiParam.getToken());
+        apiRequest.setClientType(originalApiParam.getClientType());
+        apiRequest.setClientCode(originalApiParam.getClientCode());
+        apiRequest.setTimestamp(originalApiParam.getTimestamp());
+        apiRequest.setSign(originalApiParam.getSign());
 
         return apiRequest;
     }
@@ -236,27 +226,20 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }
     }
 
-    private ApiRegisterCenter.ApiRunnable valdateSysParams(HttpServletRequest request) throws ApiException {
-        String apiName = request.getParameter(ApiParam.API_NAME);
-        String apiParams = request.getParameter(ApiParam.API_PARAMS);
-        String apiToken = request.getParameter(ApiParam.API_TOKEN);
-        String apiSign = request.getParameter(ApiParam.API_SIGN);
-
+    private ApiRegisterCenter.ApiRunnable valdateSysParams(ApiParam originalApiParam) throws ApiException {
         ApiRegisterCenter.ApiRunnable api;
-        if (StringUtils.isEmpty(apiName)) {
+        if (StringUtils.isEmpty(originalApiParam.getName())) {
             throw new ApiException(ApiCode.API_NAME_NULL);
-        } else if (StringUtils.isEmpty(apiToken)) {
+        } else if (StringUtils.isEmpty(originalApiParam.getToken())) {
             throw new ApiException(ApiCode.API_TOKEN_NULL);
-        } else if (StringUtils.isEmpty(apiSign)) {
+        } else if (StringUtils.isEmpty(originalApiParam.getSign())) {
             throw new ApiException(ApiCode.API_SIGN_NULL);
-        } else if ((api = apiRegisterCenter.findApiRunnable(apiName)) == null) {
+        } else if ((api = apiRegisterCenter.findApiRunnable(originalApiParam.getName())) == null) {
             throw new ApiException(ApiCode.API_UNEXIST);
         }
-
-        if (api.getApiMapping().needParams() && StringUtils.isEmpty(apiParams)) {
+        if (api.getApiMapping().needParams() && StringUtils.isEmpty(originalApiParam.getParams())) {
             throw new ApiException(ApiCode.API_PARAMS_NULL);
         }
-
         return api;
     }
 

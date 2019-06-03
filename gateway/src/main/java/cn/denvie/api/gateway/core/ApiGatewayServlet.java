@@ -30,15 +30,27 @@ public class ApiGatewayServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        apiHandler.handle(request, response);
+        apiHandler.handle(req, resp, "GET");
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        apiHandler.handle(req, resp);
+        apiHandler.handle(request, response, "POST");
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        apiHandler.handle(req, resp, "PUT");
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        apiHandler.handle(req, resp, "DELETE");
     }
 
 }

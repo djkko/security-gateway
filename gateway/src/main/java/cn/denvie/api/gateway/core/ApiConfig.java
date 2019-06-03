@@ -51,6 +51,11 @@ public class ApiConfig {
      */
     public static final MultiDeviceLogin MULTI_DEVICE_LOGIN = MultiDeviceLogin.ALLOW;
 
+    /**
+     * 默认的传参方式，默认为：BODY
+     */
+    public static final ParamType DEFAULT_PARAM_TYPE = ParamType.BODY;
+
     ///////////////////////////////////////////////////////////////////////////
     // Default Service Implement
     ///////////////////////////////////////////////////////////////////////////

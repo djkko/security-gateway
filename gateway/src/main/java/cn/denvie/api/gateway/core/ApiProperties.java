@@ -2,6 +2,7 @@ package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.EnctyptType;
 import cn.denvie.api.gateway.common.MultiDeviceLogin;
+import cn.denvie.api.gateway.common.ParamType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -49,6 +50,10 @@ public class ApiProperties {
      * RSA加密算法私钥，若不配置，则自动生成
      */
     private String rsaPrivateKey = null;
+    /**
+     * 传参方式，默认为：BODY
+     */
+    private ParamType paramType = ApiConfig.DEFAULT_PARAM_TYPE;
 
     public EnctyptType getEnctyptType() {
         return enctyptType;
@@ -120,5 +125,13 @@ public class ApiProperties {
 
     public void setRsaPrivateKey(String rsaPrivateKey) {
         this.rsaPrivateKey = rsaPrivateKey;
+    }
+
+    public ParamType getParamType() {
+        return paramType;
+    }
+
+    public void setParamType(ParamType paramType) {
+        this.paramType = paramType;
     }
 }
