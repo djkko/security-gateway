@@ -75,7 +75,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         ApiToken apiToken = null;
         try {
             // 系统参数验证
-            apiRunnable = valdateSysParams(originalApiParam);
+            apiRunnable = validateSysParams(originalApiParam);
             // 构建ApiRequest
             apiRequest = buildApiRequest(originalApiParam);
             // 验证Token
@@ -92,15 +92,17 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             }
 
             Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
-            logger.info("请求接口【" + originalApiParam.getName() + "】, 参数=" + apiRequest.getParams());
+            logger.info(httpMethod + "请求【" + originalApiParam.getName() + "】, 参数=" + apiRequest.getParams());
             apiResponse = responseService.success(apiRunnable.run(args));
         } catch (ApiException e) {
-            logger.error("调用接口【" + originalApiParam.getName() + "】异常，" + e.getDesc() + "，参数=" + originalApiParam.getParams()/*, e*/);
+            logger.error("调用接口【" + originalApiParam.getName() + "】异常，"
+                    + e.getDesc() + "，参数=" + originalApiParam.getParams()/*, e*/);
             apiResponse = responseService.error(e.getCode(), e.getDesc(), null);
         } catch (InvocationTargetException e) {
             Throwable t = e.getTargetException() == null ? e : e.getTargetException();
             String errMsg = t.getMessage();
-            logger.error("调用接口【" + originalApiParam.getName() + "】异常，" + errMsg + "，参数=" + originalApiParam.getParams()/*, e.getTargetException()*/);
+            logger.error("调用接口【" + originalApiParam.getName() + "】异常，"
+                    + errMsg + "，参数=" + originalApiParam.getParams()/*, e.getTargetException()*/);
             apiResponse = invokExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
             logger.error("其他异常", e);
@@ -226,7 +228,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }
     }
 
-    private ApiRegisterCenter.ApiRunnable valdateSysParams(ApiParam originalApiParam) throws ApiException {
+    private ApiRegisterCenter.ApiRunnable validateSysParams(ApiParam originalApiParam) throws ApiException {
         ApiRegisterCenter.ApiRunnable api;
         if (StringUtils.isEmpty(originalApiParam.getName())) {
             throw new ApiException(ApiCode.API_NAME_NULL);
