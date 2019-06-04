@@ -88,6 +88,9 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             // 验证Token
             if (!StringUtils.isEmpty(apiRequest.getAccessToken())) {
                 apiToken = checkToken(apiRequest, apiRunnable.getApiMapping().needLogin());
+                // 将token相关值设置到HttpServletRequest属性中
+                request.setAttribute(ApiToken.REQ_PARAM_TOKEN, apiRequest.getAccessToken());
+                request.setAttribute(ApiToken.REQ_PARAM_TOKEN_OBJ, apiToken);
             }
             // 验证签名和参数
             checkSignAndParams(apiRequest, apiToken);

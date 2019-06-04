@@ -17,6 +17,9 @@ import java.util.Date;
         uniqueConstraints = {@UniqueConstraint(columnNames = {"userId", "clientType", "clientCode"})})
 public class ApiToken implements Serializable {
 
+    public static final String REQ_PARAM_TOKEN = "req_param_token";
+    public static final String REQ_PARAM_TOKEN_OBJ = "req_param_token_obj";
+
     private static final long serialVersionUID = 5223827895858062476L;
 
     @Id
