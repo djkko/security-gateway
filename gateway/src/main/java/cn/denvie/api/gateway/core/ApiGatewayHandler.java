@@ -25,6 +25,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -51,6 +53,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     InvokExceptionHandler invokExceptionHandler;
     @Autowired
     ApiProperties apiProperties;
+    @Autowired
+    private MethodParamValidator methodParamValidator;
 
     private ParameterNameDiscoverer parameterUtils;
     private ApiRegisterCenter apiRegisterCenter;
@@ -282,8 +286,20 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             } else if (paramMap.containsKey(paramNames.get(i))) {
                 try {
                     args[i] = convertJsonToBean(paramMap.get(paramNames.get(i)), paramTypes[i]);
+                    // 验证带 @Valid 注解的参数
+                    if (apiRunnable.getMethodParameters().get(i).hasParameterAnnotation(Valid.class)) {
+                        Set<ConstraintViolation<Object>> violationSet = methodParamValidator.validate(args[i]);
+                        // @Valid 参数校验失败
+                        if (violationSet != null && !violationSet.isEmpty()) {
+                            StringBuilder validMsgBuilder = new StringBuilder();
+                            for (ConstraintViolation<Object> violation : violationSet) {
+                                validMsgBuilder.append(violation.getMessage()).append(";");
+                            }
+                            throw new RuntimeException(validMsgBuilder.toString());
+                        }
+                    }
                 } catch (Exception e) {
-                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数格式或值错误："
+                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数错误："
                             + e.getMessage());
                 }
             } else if ((resolver = apiRegisterCenter.supportsParameter(apiRunnable.getMethodParameters().get(i))) != null) {
@@ -291,7 +307,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                     args[i] = resolver.resolveArgument(apiRunnable.getMethodParameters().get(i), null,
                             new ServletWebRequest(request), null);
                 } catch (Exception e) {
-                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数格式或值错误："
+                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数错误："
                             + e.getMessage());
                 }
             } else {

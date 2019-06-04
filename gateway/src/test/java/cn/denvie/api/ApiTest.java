@@ -40,9 +40,9 @@ public class ApiTest {
     public void generateAesParams() throws Exception {
         System.out.println("========== 生成AES请求参数 ==========");
         String apiName = "user_add";
-        String accessToken = "5e4df73b71be438b96efd78c93cb36a5";
-        String secret = "a31a49d05364ac2d";
-        String params = AESUtils.encryptToBase64("{\"username\":\"bbbb\", \"password\":\"bbbb\"}", secret);
+        String accessToken = "4187b6dcb8dd4f84a74b4c296ed02578";
+        String secret = "55ccca1a67e3f45e";
+        String params = AESUtils.encryptToBase64("{\"username\":\"user111\", \"password\":\"pwd111\", \"userForm\":{\"userFormId\": \"iG0zcxD2\", \"userFormName\":null, \"userFormPassword\":null}}", secret);
         String paramsEncode = URLEncoder.encode(params, CHARSET);
         generateParam(apiName, secret, accessToken, params, paramsEncode);
     }
@@ -52,7 +52,7 @@ public class ApiTest {
     public void generateRsaParams() throws Exception {
         System.out.println("========== 生成RSA请求参数 ==========");
         String apiName = "user_add";
-        String accessToken = "3343fd1f23544c19a622d1a3dae52fd3";
+        String accessToken = "71905ddaaa5a414aac1b53eb1eb83008";
         String secret = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKt3GtsOYX8bDOL5mpXHr5ZOd7fMTUOvWt0/CzROgZiF/7qKsMdIzFGY3xwnkj/5JRXoinuN6+yH+H2V3H8K9tkCAwEAAQ==";
         String params = RSAUtils.encryptByPublicKey(secret, "{\"username\":\"bbb\", \"password\":\"ccc\"}");
         String paramsEncode = URLEncoder.encode(params, CHARSET);

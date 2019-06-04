@@ -37,7 +37,7 @@ public class ApiRegisterCenter {
             // 获取自定义的 HandlerMethodArgumentResolver
             if (!type.getName().startsWith("org.springframework")
                     && obj != null && obj instanceof HandlerMethodArgumentResolver) {
-                System.err.println("HandlerMethodArgumentResolver: " + type.getName());
+                // System.err.println("HandlerMethodArgumentResolver: " + type.getName());
                 methodArgumentResolvers.add((HandlerMethodArgumentResolver) obj);
             }
 

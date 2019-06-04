@@ -22,8 +22,8 @@ public class UserFormMethodArgumentResolver implements HandlerMethodArgumentReso
         UserForm user = new UserForm();
         String uuid = RandomUtils.generateShortUuid();
         user.setUserFormId(uuid);
-        user.setUserFormName("User" + uuid);
-        user.setUserFormPassword("Password" + uuid);
+        // user.setUserFormName("User" + uuid);
+        // user.setUserFormPassword("Password" + uuid);
         return user;
     }
 

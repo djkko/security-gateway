@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +41,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @ApiMapping(value = "user_add")
-    public User add(String username, String password, @UserFormAnnotation UserForm userForm) throws ApiException {
+    public User add(String username, String password,
+                    @Valid UserForm userForm, @UserFormAnnotation UserForm testAnnotationInject) throws ApiException {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             throw new ApiException("用户名和密码不能为空");
         }
@@ -49,7 +52,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 测试通过'HandlerMethodArgumentResolver'注入的参数'UserForm'值
-        System.out.println("UserForm: " + userForm);
+        System.out.println("UserForm: " + testAnnotationInject);
 
         User user = new User();
         user.setMemberId(RandomUtils.generateShortUuid());
