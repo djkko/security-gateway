@@ -83,9 +83,12 @@ value：接口名，需全局唯一
 needLogin：是否需要登录鉴权  
 needParams：参数是否做判空校验  
 
-传参方式为“FORM”时的接口的调用格式为：  
-http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"aa123456"}&token=3343fd1f23544c19a622d1a3dae52fd3&clientType=android&clientCode=LO290DAL183K&timestamp=1556442217873&sign=BE16798DBA1561A8AD369C0438AEE5A0  
+传参方式为“FORM”时的接口的调用格式为：
+```
+http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"aa123456"}&token=3343fd1f23544c19a622d1a3dae52fd3&clientType=android&clientCode=LO290DAL183K&timestamp=1556442217873&sign=BE16798DBA1561A8AD369C0438AEE5A0
+```    
 传参方式为“BODY”时的接口的调用格式为：http://localhost:8080/api，请求BODY的类型为“application/json”，BODY值格式如下：  
+```
 {
 	"name": "user_add",
 	"params": "o+bA2FaNZXJYLmEJKTSmXbj9nnydfUYwYUFkEo/vsOQ1QMkNY9EXeqb2hTv7pns9",
@@ -94,7 +97,8 @@ http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"
 	"clientCode": "LO290DAL183K",
 	"timestamp": "1559552986907",
 	"sign": "3758874B4E8BB86E9F01634035AE376D"
-}  
+}
+```
 
 参数说明如下：  
 name：@ApiMapping定义的接口名  

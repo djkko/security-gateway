@@ -309,7 +309,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             }
         }
 
-        // 验证方法中带 @Valid 注解的基本数据类型参数
+        // 验证方法中带 @Valid 注解的参数
         validateParamValue(methodParamValidator.validateParameters(apiRunnable.getTarget(), method, args));
 
         return args;
