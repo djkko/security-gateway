@@ -29,7 +29,7 @@ public class ApiConfig {
     /**
      * 是否启用客户端与服务端时间差校验
      */
-    public static final boolean TIMESTAMP_CHECK_ENABLE = true;
+    public static final boolean TIMESTAMP_CHECK_ENABLE = false;
 
     /**
      * 是否启用客户端设备校验

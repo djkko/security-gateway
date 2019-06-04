@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @ApiMapping(value = "user_add")
-    public User add(String username, String password,
+    public User add(String username, @Valid @NotNull(message = "密码不能为空") String password,
                     @Valid UserForm userForm, @UserFormAnnotation UserForm testAnnotationInject) throws ApiException {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             throw new ApiException("用户名和密码不能为空");

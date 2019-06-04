@@ -5,7 +5,8 @@
 同时，支持请求参数的加密加签，保证接口安全。  
 * 参数加密方式支持Base64、AES、RSA，可通过配置文件设置
 * 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
-* 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数。
+* 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数
+* 支持方法参数添加@Valid注解进行参数校验
 
 #### 用法
 (1). 创建数据库和表
@@ -116,7 +117,7 @@ cn.denvie.api.rsaPublicKey=
 ## RSA加密算法私钥，若不配置，则自动生成
 cn.denvie.api.rsaPrivateKey=
 ## 是否启用客户端与服务端时间差校验
-cn.denvie.api.ckeckTimestamp=true
+cn.denvie.api.ckeckTimestamp=false
 ## 允许的客户端请求时间与服务端时间差
 cn.denvie.api.timestampDiffer=900000
 ## 是否启用客户端设备校验

@@ -10,6 +10,7 @@ import cn.denvie.api.gateway.utils.JsonUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,8 +103,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             apiResponse = responseService.success(apiRunnable.run(args));
         } catch (ApiException e) {
             logger.error("调用接口【" + originalApiParam.getName() + "】异常，"
-                    + e.getDesc() + "，参数=" + originalApiParam.getParams()/*, e*/);
-            apiResponse = responseService.error(e.getCode(), e.getDesc(), null);
+                    + e.getMessage() + "，参数=" + originalApiParam.getParams()/*, e*/);
+            apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
         } catch (InvocationTargetException e) {
             Throwable t = e.getTargetException() == null ? e : e.getTargetException();
             String errMsg = t.getMessage();
@@ -286,18 +287,11 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             } else if (paramMap.containsKey(paramNames.get(i))) {
                 try {
                     args[i] = convertJsonToBean(paramMap.get(paramNames.get(i)), paramTypes[i]);
-                    // 验证带 @Valid 注解的参数
-                    if (apiRunnable.getMethodParameters().get(i).hasParameterAnnotation(Valid.class)) {
-                        Set<ConstraintViolation<Object>> violationSet = methodParamValidator.validate(args[i]);
-                        // @Valid 参数校验失败
-                        if (violationSet != null && !violationSet.isEmpty()) {
-                            StringBuilder validMsgBuilder = new StringBuilder();
-                            for (ConstraintViolation<Object> violation : violationSet) {
-                                validMsgBuilder.append(violation.getMessage()).append(";");
-                            }
-                            throw new RuntimeException(validMsgBuilder.toString());
-                        }
-                    }
+                    // 验证带 @Valid 注解的Bean参数
+                    /*if (!BeanUtils.isSimpleProperty(paramTypes[i])
+                            && apiRunnable.getMethodParameters().get(i).hasParameterAnnotation(Valid.class)) {
+                        validateParamValue(methodParamValidator.validate(args[i]));
+                    }*/
                 } catch (Exception e) {
                     throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数错误："
                             + e.getMessage());
@@ -314,7 +308,23 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                 args[i] = null;
             }
         }
+
+        // 验证方法中带 @Valid 注解的基本数据类型参数
+        validateParamValue(methodParamValidator.validateParameters(apiRunnable.getTarget(), method, args));
+
         return args;
+    }
+
+    private void validateParamValue(Set<ConstraintViolation<Object>> constraintViolations) {
+        if (constraintViolations != null && !constraintViolations.isEmpty()) {
+            // @Valid 参数校验失败
+            StringBuilder validMsgBuilder = new StringBuilder();
+            for (ConstraintViolation<Object> violation : constraintViolations) {
+                validMsgBuilder.append(violation.getMessage()).append(";");
+            }
+            validMsgBuilder.deleteCharAt(validMsgBuilder.length() - 1);
+            throw new RuntimeException(validMsgBuilder.toString());
+        }
     }
 
     // 将MAP转换成具体的目标方方法参数对象

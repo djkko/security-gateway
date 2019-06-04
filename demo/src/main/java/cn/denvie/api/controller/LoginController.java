@@ -57,7 +57,7 @@ public class LoginController {
             apiToken.setPrivateSecret("");
             return responseService.success(apiToken);
         } catch (ApiException e) {
-            return responseService.error(e.getCode(),e.getDesc(), null);
+            return responseService.error(e.getCode(),e.getMessage(), null);
         }
     }
 

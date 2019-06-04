@@ -40,9 +40,9 @@ public class ApiTest {
     public void generateAesParams() throws Exception {
         System.out.println("========== 生成AES请求参数 ==========");
         String apiName = "user_add";
-        String accessToken = "4187b6dcb8dd4f84a74b4c296ed02578";
-        String secret = "55ccca1a67e3f45e";
-        String params = AESUtils.encryptToBase64("{\"username\":\"user111\", \"password\":\"pwd111\", \"userForm\":{\"userFormId\": \"iG0zcxD2\", \"userFormName\":null, \"userFormPassword\":null}}", secret);
+        String accessToken = "a7e6ab7c535a4648aeae863fcccee668";
+        String secret = "c6c10f2b49b15f07";
+        String params = AESUtils.encryptToBase64("{\"username\":\"user111\", \"password\":null, \"userForm\":{\"userFormId\": \"iG0zcxD2\", \"userFormName\":null, \"userFormPassword\":\"fbbb\"}}", secret);
         String paramsEncode = URLEncoder.encode(params, CHARSET);
         generateParam(apiName, secret, accessToken, params, paramsEncode);
     }

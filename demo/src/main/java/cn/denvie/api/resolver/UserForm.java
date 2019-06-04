@@ -6,10 +6,10 @@ public class UserForm {
 
     private String userFormId;
 
-    @NotNull(message = "用户名不能为空")
+    @NotNull(message = "UserForm用户名不能为空")
     private String userFormName;
 
-    @NotNull(message = "密码不能为空")
+    @NotNull(message = "UserForm密码不能为空")
     private String userFormPassword;
 
     public String getUserFormId() {

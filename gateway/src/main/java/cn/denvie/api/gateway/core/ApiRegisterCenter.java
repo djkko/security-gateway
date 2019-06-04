@@ -132,11 +132,7 @@ public class ApiRegisterCenter {
         private List<MethodParameter> methodParameters = new ArrayList<>();
 
         public Object run(Object... args) throws Exception {
-            if (target == null) {
-                // applicationContext.getBean() 是线程安全的
-                target = applicationContext.getBean(targetName);
-            }
-            return targetMethod.invoke(target, args);
+            return targetMethod.invoke(getTarget(), args);
         }
 
         public Class<?>[] getParamTypes() {
@@ -152,6 +148,10 @@ public class ApiRegisterCenter {
         }
 
         public Object getTarget() {
+            if (target == null) {
+                // applicationContext.getBean() 是线程安全的
+                target = applicationContext.getBean(targetName);
+            }
             return target;
         }
 
