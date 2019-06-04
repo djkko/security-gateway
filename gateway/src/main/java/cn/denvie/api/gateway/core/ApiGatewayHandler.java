@@ -20,6 +20,8 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -250,14 +252,14 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
      */
     private Object[] buildParams(ApiRegisterCenter.ApiRunnable apiRunnable, String paramJson, HttpServletRequest request,
                                  HttpServletResponse response, ApiRequest apiRequest) throws ApiException {
-        Map<String, Object> map;
+        Map<String, Object> paramMap;
         try {
-            map = JsonUtils.toMap(paramJson);
+            paramMap = JsonUtils.toMap(paramJson);
         } catch (Exception e) {
             throw new ApiException(ApiCode.CHECK_PARAMS_INVALID);
         }
-        if (map == null) {
-            map = new HashMap<>();
+        if (paramMap == null) {
+            paramMap = new HashMap<>();
         }
 
         Method method = apiRunnable.getTargetMethod();
@@ -271,14 +273,23 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }*/
 
         Object[] args = new Object[paramTypes.length];
+        HandlerMethodArgumentResolver resolver;
         for (int i = 0; i < paramTypes.length; i++) {
             if (paramTypes[i].isAssignableFrom(HttpServletRequest.class)) {
                 args[i] = request;
             } else if (paramTypes[i].isAssignableFrom(ApiRequest.class)) {
                 args[i] = apiRequest;
-            } else if (map.containsKey(paramNames.get(i))) {
+            } else if (paramMap.containsKey(paramNames.get(i))) {
                 try {
-                    args[i] = convertJsonToBean(map.get(paramNames.get(i)), paramTypes[i]);
+                    args[i] = convertJsonToBean(paramMap.get(paramNames.get(i)), paramTypes[i]);
+                } catch (Exception e) {
+                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数格式或值错误："
+                            + e.getMessage());
+                }
+            } else if ((resolver = apiRegisterCenter.supportsParameter(apiRunnable.getMethodParameters().get(i))) != null) {
+                try {
+                    args[i] = resolver.resolveArgument(apiRunnable.getMethodParameters().get(i), null,
+                            new ServletWebRequest(request), null);
                 } catch (Exception e) {
                     throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数格式或值错误："
                             + e.getMessage());

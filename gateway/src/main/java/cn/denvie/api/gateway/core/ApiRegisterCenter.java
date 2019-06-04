@@ -1,9 +1,12 @@
 package cn.denvie.api.gateway.core;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.MethodParameter;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * API注册中心。
@@ -14,7 +17,8 @@ import java.util.*;
 public class ApiRegisterCenter {
 
     private ApplicationContext applicationContext;
-    private HashMap<String, ApiRunnable> apiMap = new HashMap();
+    private ConcurrentHashMap<String, ApiRunnable> apiMap = new ConcurrentHashMap();
+    private List<HandlerMethodArgumentResolver> methodArgumentResolvers = new ArrayList<>();
 
     // spring ioc
     public ApiRegisterCenter(ApplicationContext applicationContext) {
@@ -25,8 +29,18 @@ public class ApiRegisterCenter {
         // spring ioc 扫描所有Bean
         String[] beanNames = applicationContext.getBeanDefinitionNames();
         Class<?> type;
+        Object obj;
         for (String name : beanNames) {
             type = applicationContext.getType(name);
+            obj = applicationContext.getBean(name);
+
+            // 获取自定义的 HandlerMethodArgumentResolver
+            if (!type.getName().startsWith("org.springframework")
+                    && obj != null && obj instanceof HandlerMethodArgumentResolver) {
+                System.err.println("HandlerMethodArgumentResolver: " + type.getName());
+                methodArgumentResolvers.add((HandlerMethodArgumentResolver) obj);
+            }
+
             for (Method m : type.getDeclaredMethods()) {
                 // 通过反谢拿到APIMapping注解
                 ApiMapping apiMapping = m.getAnnotation(ApiMapping.class);
@@ -35,6 +49,18 @@ public class ApiRegisterCenter {
                 }
             }
         }
+    }
+
+    /**
+     * 获取支持的方法参数解析器
+     */
+    public HandlerMethodArgumentResolver supportsParameter(MethodParameter parameter) {
+        for (HandlerMethodArgumentResolver resolver : methodArgumentResolvers) {
+            if (resolver.supportsParameter(parameter)) {
+                return resolver;
+            }
+        }
+        return null;
     }
 
     public ApiRunnable findApiRunnable(String apiName) {
@@ -48,6 +74,10 @@ public class ApiRegisterCenter {
         apiRunnable.targetMethod = method;
         apiRunnable.targetMethodName = type.getName() + "." + method.getName();
         apiRunnable.apiMapping = apiMapping;
+        // MethodParameter
+        for (int i = 0; i < method.getParameterTypes().length; i++) {
+            apiRunnable.getMethodParameters().add(new MethodParameter(method, i));
+        }
         apiMap.put(apiRunnable.apiName, apiRunnable);
     }
 
@@ -98,6 +128,9 @@ public class ApiRegisterCenter {
         private String targetMethodName;    // 执行的方法全路径
         private ApiMapping apiMapping;
 
+        // MethodParameter
+        private List<MethodParameter> methodParameters = new ArrayList<>();
+
         public Object run(Object... args) throws Exception {
             if (target == null) {
                 // applicationContext.getBean() 是线程安全的
@@ -132,6 +165,14 @@ public class ApiRegisterCenter {
 
         public ApiMapping getApiMapping() {
             return apiMapping;
+        }
+
+        public List<MethodParameter> getMethodParameters() {
+            return methodParameters;
+        }
+
+        public void setMethodParameters(List<MethodParameter> methodParameters) {
+            this.methodParameters = methodParameters;
         }
     }
 

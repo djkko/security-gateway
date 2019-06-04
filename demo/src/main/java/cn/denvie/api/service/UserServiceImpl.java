@@ -5,6 +5,8 @@ import cn.denvie.api.gateway.common.ApiException;
 import cn.denvie.api.gateway.core.ApiMapping;
 import cn.denvie.api.gateway.core.ApiRequest;
 import cn.denvie.api.gateway.utils.RandomUtils;
+import cn.denvie.api.resolver.UserFormAnnotation;
+import cn.denvie.api.resolver.UserForm;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -37,7 +39,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @ApiMapping(value = "user_add")
-    public User add(String username, String password) throws ApiException {
+    public User add(String username, String password, @UserFormAnnotation UserForm userForm) throws ApiException {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             throw new ApiException("用户名和密码不能为空");
         }
@@ -45,6 +47,9 @@ public class UserServiceImpl implements UserService {
         if (sUserMap.get(username) != null) {
             throw new ApiException("用户[" + username + "]已存在");
         }
+
+        // 测试通过'HandlerMethodArgumentResolver'注入的参数'UserForm'值
+        System.out.println("UserForm: " + userForm);
 
         User user = new User();
         user.setMemberId(RandomUtils.generateShortUuid());

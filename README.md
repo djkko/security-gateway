@@ -1,21 +1,52 @@
 # api-gateway
 
 #### 介绍
-一款简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率。
-同时，支持请求参数的加密加签，保证接口安全。
-目前，参数加密方式支持Base64、AES、RSA，可通过配置文件设置；签名方式提供了默认实现，
-调用方也可通过实现SignatureService接口的@Service自定义规则。
+一款基于SpringBoot的简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率。
+同时，支持请求参数的加密加签，保证接口安全。  
+* 参数加密方式支持Base64、AES、RSA，可通过配置文件设置
+* 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
+* 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数。
 
 #### 用法
-(1). 创建数据库
+(1). 创建数据库和表
 ```
 CREATE DATABASE `api-gateway` CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
+```
+```
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for api_token
+-- ----------------------------
+DROP TABLE IF EXISTS `api_token`;
+CREATE TABLE `api_token`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `access_token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `client_code` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `client_ip` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `client_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `create_time` bigint(20) NULL DEFAULT NULL,
+  `expire_time` bigint(20) NULL DEFAULT NULL,
+  `ext1` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `ext2` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `private_secret` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `secret` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `user_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `user_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `UKepcpf927l9olsm9c9ky6anydp`(`user_id`, `client_type`, `client_code`) USING BTREE,
+  UNIQUE INDEX `UK_gk8n48qmwccac74paobkchmka`(`access_token`) USING BTREE,
+  INDEX `IDXinllpovnunrvf1xbvm6q34t3j`(`access_token`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+SET FOREIGN_KEY_CHECKS = 1;
 ```
 
 (2). 在配置文件中配置数据源
 ```
 spring.jpa.show-sql=true
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=none
 spring.jpa.database-platform=org.hibernate.dialect.MySQL5Dialect
 
 ## data source config, use HikariDataSource

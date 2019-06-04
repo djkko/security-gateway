@@ -8,10 +8,13 @@ import cn.denvie.api.gateway.core.ApiRequest;
 import cn.denvie.api.gateway.core.ApiToken;
 import cn.denvie.api.gateway.service.ApiTokenService;
 import cn.denvie.api.gateway.service.ResponseService;
+import cn.denvie.api.resolver.UserFormAnnotation;
+import cn.denvie.api.resolver.UserForm;
 import cn.denvie.api.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -27,8 +30,9 @@ public class LoginController {
     private ResponseService responseService;
 
     @PostMapping("/login")
+    @ResponseBody
     public ApiResponse login(String userId, String username, String password, String clientType,
-                             String clientCode, HttpServletRequest request, ApiRequest requestaaa) {
+                             String clientCode, @UserFormAnnotation UserForm form, HttpServletRequest request, ApiRequest apiRequest) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             return responseService.error("110000","用户名或密码错误", null);
         }
