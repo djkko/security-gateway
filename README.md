@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
 @ApiMapping的属性说明：  
 value：接口名，需全局唯一  
 needLogin：是否需要登录鉴权  
-needParams：参数是否做判空校验  
+needParams：是否做参数判空校验  
 
 传参方式为“FORM”时的接口的调用格式为：
 ```
@@ -108,7 +108,7 @@ clientType：客户端类别，android、ios、web等
 clientCode：客户端设备唯一标识  
 timestamp：Long类型的请求时间戳  
 sign：参数签名  
-其中，传参方式为“FORM”时token、clientType、clientCode三个参数的传值同时支持Header及Param方式，Header中取不到时，会从Param中再取一次。
+其中，token、clientType、clientCode三个参数的传值同时支持Header及Param方式。
 
 #### API网关配置项（如不设置，则默认值为以下各项的值）
 ```
@@ -123,13 +123,13 @@ cn.denvie.api.rsaPrivateKey=
 ## 是否启用客户端与服务端时间差校验
 cn.denvie.api.ckeckTimestamp=false
 ## 允许的客户端请求时间与服务端时间差
-cn.denvie.api.timestampDiffer=900000
+cn.denvie.api.timestampDiffer=600000
 ## 是否启用客户端设备校验
 cn.denvie.api.checkDevice=true
 ## Token的有效期（毫秒）
 cn.denvie.api.tokenValidTime=1209600000
 ## 多设备登录策略：ALLOW（允许同时登录）、REPLACE（挤掉对方）、REFUSE（拒绝登录）
-cn.denvie.api.multiDeviceLogin=ALLOW
+cn.denvie.api.multiDeviceLogin=REPLACE
 ## 传参方式：FORM、BODY，默认为：BODY
 cn.denvie.api.paramType=BODY
 ```

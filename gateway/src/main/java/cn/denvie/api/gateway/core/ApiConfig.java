@@ -39,7 +39,7 @@ public class ApiConfig {
     /**
      * 允许的客户端请求时间与服务端时间差
      */
-    public static final long TIMESTAMP_DIFFER = 15 * 60 * 1000;
+    public static final long TIMESTAMP_DIFFER = 10 * 60 * 1000;
 
     /**
      * Token的有效期（毫秒）
@@ -49,7 +49,7 @@ public class ApiConfig {
     /**
      * 多设备登录策略
      */
-    public static final MultiDeviceLogin MULTI_DEVICE_LOGIN = MultiDeviceLogin.ALLOW;
+    public static final MultiDeviceLogin MULTI_DEVICE_LOGIN = MultiDeviceLogin.REPLACE;
 
     /**
      * 默认的传参方式，默认为：BODY
