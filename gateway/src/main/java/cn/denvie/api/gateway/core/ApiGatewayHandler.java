@@ -194,7 +194,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
         // 时间差校验
         long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
-        if (apiProperties.isCkeckTimestamp() && diffTime > apiProperties.getTimestampDiffer()) {
+        if (apiProperties.isCheckTimestamp() && diffTime > apiProperties.getTimestampDiffer()) {
             throw new ApiException(ApiCode.CHECK_TIME_INVALID);
         }
 

@@ -3,6 +3,7 @@ package cn.denvie.api.gateway.core;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.lang.reflect.Method;
@@ -38,6 +39,7 @@ public class ApiRegisterCenter {
         for (String beanName : beanNames) {
             type = applicationContext.getType(beanName);
             obj = applicationContext.getBean(beanName);
+            // log.info("【ApiGateway】Find Bean：{}, Type：{}，obj：{}", beanName, type, obj);
 
             // 获取自定义的 HandlerMethodArgumentResolver
             if (!type.getName().startsWith("org.springframework")
@@ -48,7 +50,9 @@ public class ApiRegisterCenter {
 
             for (Method m : type.getDeclaredMethods()) {
                 // 通过反谢拿到APIMapping注解
-                ApiMapping apiMapping = m.getAnnotation(ApiMapping.class);
+                // 使用AnnotationUtils解决SpringBean被cglib动态代理后导致自定义注解丢失问题
+                // ApiMapping apiMapping = m.getAnnotation(ApiMapping.class);
+                ApiMapping apiMapping = AnnotationUtils.findAnnotation(m, ApiMapping.class);
                 if (apiMapping != null) {
                     addApiItem(apiMapping, beanName, m, type);
                 }

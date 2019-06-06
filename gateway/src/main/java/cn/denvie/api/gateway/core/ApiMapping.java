@@ -1,9 +1,6 @@
 package cn.denvie.api.gateway.core;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * API映射注解，用来声明对外暴露的接口。
@@ -11,6 +8,12 @@ import java.lang.annotation.Target;
  * @author DengZhaoyong
  * @version 1.0.0
  */
+/*
+SpringBean被cglib动态代理后导致自定义注解丢失问题解决方案：
+1.将spring.aop.proxy-target-class=true 去掉， 自动使用JDK代理。
+2.使用注解解析器工具org.springframework.core.annotation.AnnotationUtils
+ */
+@Inherited
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ApiMapping {

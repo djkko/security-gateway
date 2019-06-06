@@ -21,7 +21,7 @@ public class ApiProperties {
     /**
      * 是否启用客户端与服务端时间差校验
      */
-    private boolean ckeckTimestamp = ApiConfig.TIMESTAMP_CHECK_ENABLE;
+    private boolean checkTimestamp = ApiConfig.TIMESTAMP_CHECK_ENABLE;
     /**
      * 允许的客户端请求时间与服务端时间差
      */
@@ -63,12 +63,12 @@ public class ApiProperties {
         this.enctyptType = enctyptType;
     }
 
-    public boolean isCkeckTimestamp() {
-        return ckeckTimestamp;
+    public boolean isCheckTimestamp() {
+        return checkTimestamp;
     }
 
-    public void setCkeckTimestamp(boolean ckeckTimestamp) {
-        this.ckeckTimestamp = ckeckTimestamp;
+    public void setCheckTimestamp(boolean checkTimestamp) {
+        this.checkTimestamp = checkTimestamp;
     }
 
     public long getTimestampDiffer() {

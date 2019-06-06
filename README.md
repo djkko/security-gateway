@@ -121,7 +121,7 @@ cn.denvie.api.rsaPublicKey=
 ## RSA加密算法私钥，若不配置，则自动生成
 cn.denvie.api.rsaPrivateKey=
 ## 是否启用客户端与服务端时间差校验
-cn.denvie.api.ckeckTimestamp=false
+cn.denvie.api.checkTimestamp=false
 ## 允许的客户端请求时间与服务端时间差
 cn.denvie.api.timestampDiffer=600000
 ## 是否启用客户端设备校验
