@@ -2,15 +2,13 @@ package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
 import cn.denvie.api.gateway.service.ApiTokenService;
-import cn.denvie.api.gateway.service.InvokExceptionHandler;
+import cn.denvie.api.gateway.service.InvokeExceptionHandler;
 import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.gateway.service.SignatureService;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.JsonUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +25,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -40,9 +36,8 @@ import java.util.*;
  * @version 1.0.0
  */
 @Component
+@Slf4j
 public class ApiGatewayHandler implements InitializingBean, ApplicationContextAware {
-
-    private static final Logger logger = LoggerFactory.getLogger(ApiGatewayHandler.class);
 
     @Autowired
     private ApiTokenService apiTokenService;
@@ -51,7 +46,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     @Autowired
     private SignatureService signatureService;
     @Autowired
-    InvokExceptionHandler invokExceptionHandler;
+    InvokeExceptionHandler invokeExceptionHandler;
     @Autowired
     ApiProperties apiProperties;
     @Autowired
@@ -102,21 +97,22 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             }
 
             Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
-            logger.info(httpMethod + "请求【" + originalApiParam.getName() + "】, 参数=" + apiRequest.getParams());
+            log.info(httpMethod + "调用接口【{}】，参数：{}", originalApiParam.getName(), apiRequest.getParams());
             apiResponse = responseService.success(apiRunnable.run(args));
         } catch (ApiException e) {
-            logger.error("调用接口【" + originalApiParam.getName() + "】异常，"
-                    + e.getMessage() + "，参数=" + originalApiParam.getParams()/*, e*/);
+            log.error("调用接口【{}】异常：{}，参数：{}",
+                    originalApiParam.getName(), e.getMessage(), originalApiParam.getParams()/*, e*/);
             apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
         } catch (InvocationTargetException e) {
             Throwable t = e.getTargetException() == null ? e : e.getTargetException();
             String errMsg = t.getMessage();
-            logger.error("调用接口【" + originalApiParam.getName() + "】异常，"
-                    + errMsg + "，参数=" + originalApiParam.getParams()/*, e.getTargetException()*/);
-            apiResponse = invokExceptionHandler.handle(apiRequest, t);
+            log.error("调用接口【{}】异常：{}，参数：{}",
+                    originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
+            apiResponse = invokeExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
-            logger.error("其他异常", e);
-            apiResponse = invokExceptionHandler.handle(apiRequest, e);
+            log.error("调用接口【{}】异常：{}，参数：{}",
+                    originalApiParam.getName(), e.toString(), originalApiParam.getParams());
+            apiResponse = invokeExceptionHandler.handle(apiRequest, e);
         }
 
         // 统一返回结果
@@ -368,8 +364,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             if (json != null) {
                 response.getWriter().write(json);
             }
-        } catch (IOException e) {
-            logger.error("服务器响应异常", e);
+        } catch (Exception e) {
+            log.error("服务器响应异常：{}", e.toString());
             throw new RuntimeException(e);
         }
     }

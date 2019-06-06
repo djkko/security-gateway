@@ -1,6 +1,5 @@
 package cn.denvie.api.gateway.utils;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +16,7 @@ import java.util.Map;
  */
 public class JsonUtils {
 
+    // 默认的JSON解析器
     private static final ObjectMapper JSON_MAPPER = newObjectMapper();
 
     private static ObjectMapper newObjectMapper() {

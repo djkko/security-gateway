@@ -9,7 +9,7 @@ import cn.denvie.api.gateway.core.ApiRequest;
  * @author DengZhaoyong
  * @version 1.0.0
  */
-public interface InvokExceptionHandler {
+public interface InvokeExceptionHandler {
     /**
      * 处理API调用异常。
      *

@@ -1,11 +1,15 @@
 package cn.denvie.api.gateway.core;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.MethodParameter;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -14,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author DengZhaoyong
  * @version 1.0.0
  */
+@Slf4j
 public class ApiRegisterCenter {
 
     private ApplicationContext applicationContext;
@@ -30,14 +35,14 @@ public class ApiRegisterCenter {
         String[] beanNames = applicationContext.getBeanDefinitionNames();
         Class<?> type;
         Object obj;
-        for (String name : beanNames) {
-            type = applicationContext.getType(name);
-            obj = applicationContext.getBean(name);
+        for (String beanName : beanNames) {
+            type = applicationContext.getType(beanName);
+            obj = applicationContext.getBean(beanName);
 
             // 获取自定义的 HandlerMethodArgumentResolver
             if (!type.getName().startsWith("org.springframework")
                     && obj != null && obj instanceof HandlerMethodArgumentResolver) {
-                // System.err.println("HandlerMethodArgumentResolver: " + type.getName());
+                log.info("【ApiGateway】Find HandlerMethodArgumentResolver：{}", type.getName());
                 methodArgumentResolvers.add((HandlerMethodArgumentResolver) obj);
             }
 
@@ -45,7 +50,7 @@ public class ApiRegisterCenter {
                 // 通过反谢拿到APIMapping注解
                 ApiMapping apiMapping = m.getAnnotation(ApiMapping.class);
                 if (apiMapping != null) {
-                    addApiItem(apiMapping, name, m, type);
+                    addApiItem(apiMapping, beanName, m, type);
                 }
             }
         }
@@ -78,6 +83,8 @@ public class ApiRegisterCenter {
         for (int i = 0; i < method.getParameterTypes().length; i++) {
             apiRunnable.getMethodParameters().add(new MethodParameter(method, i));
         }
+        // Add to ApiRunnable Map
+        log.info("【ApiGateway】Find Api：{}", apiRunnable.toString());
         apiMap.put(apiRunnable.apiName, apiRunnable);
     }
 
@@ -173,6 +180,15 @@ public class ApiRegisterCenter {
 
         public void setMethodParameters(List<MethodParameter> methodParameters) {
             this.methodParameters = methodParameters;
+        }
+
+        @Override
+        public String toString() {
+            return "ApiRunnable{" +
+                    "apiName='" + apiName + '\'' +
+                    ", targetName='" + targetName + '\'' +
+                    ", targetMethodName='" + targetMethodName + '\'' +
+                    '}';
         }
     }
 

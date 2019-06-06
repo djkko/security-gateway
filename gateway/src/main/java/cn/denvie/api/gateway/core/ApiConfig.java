@@ -1,7 +1,7 @@
 package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
-import cn.denvie.api.gateway.service.InvokExceptionHandler;
+import cn.denvie.api.gateway.service.InvokeExceptionHandler;
 import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.gateway.service.SignatureService;
 import cn.denvie.api.gateway.utils.MD5Utils;
@@ -131,10 +131,10 @@ public class ApiConfig {
      * API调用异常处理的默认实现，调用方可自定义。
      */
     @Bean
-    @ConditionalOnMissingBean(InvokExceptionHandler.class)
-    public InvokExceptionHandler invokExceptionHandler(ResponseService responseService) {
+    @ConditionalOnMissingBean(InvokeExceptionHandler.class)
+    public InvokeExceptionHandler invokExceptionHandler(ResponseService responseService) {
 
-        return new InvokExceptionHandler() {
+        return new InvokeExceptionHandler() {
             @Override
             public ApiResponse handle(ApiRequest apiRequest, Throwable e) {
                 String errMsg = e == null ?

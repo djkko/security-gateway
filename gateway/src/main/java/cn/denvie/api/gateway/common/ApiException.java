@@ -29,4 +29,12 @@ public class ApiException extends Exception {
         return code;
     }
 
+    public int getCodeInt() {
+        try {
+            return Integer.parseInt(code);
+        } catch (NumberFormatException e) {
+            return Integer.parseInt(ApiCode.FAILURE.code());
+        }
+    }
+
 }
