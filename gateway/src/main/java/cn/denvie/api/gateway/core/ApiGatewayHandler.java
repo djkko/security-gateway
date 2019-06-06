@@ -14,7 +14,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
@@ -27,7 +27,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.ConstraintViolation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * API请求处理器。
@@ -56,7 +59,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private ApiRegisterCenter apiRegisterCenter;
 
     public ApiGatewayHandler() {
-        parameterUtils = new LocalVariableTableParameterNameDiscoverer();
+        parameterUtils = new DefaultParameterNameDiscoverer();
     }
 
     @Override
@@ -108,10 +111,12 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             String errMsg = t.getMessage();
             log.error("调用接口【{}】异常：{}，参数：{}",
                     originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
+            e.printStackTrace();
             apiResponse = invokeExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
             log.error("调用接口【{}】异常：{}，参数：{}",
                     originalApiParam.getName(), e.toString(), originalApiParam.getParams());
+            e.printStackTrace();
             apiResponse = invokeExceptionHandler.handle(apiRequest, e);
         }
 
@@ -267,7 +272,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }
 
         Method method = apiRunnable.getTargetMethod();
-        List<String> paramNames = Arrays.asList(parameterUtils.getParameterNames(method));
+        String[] paramNames = apiRunnable.getApiMapping().paramNames();
+        log.info("{} Method ParameterNames：{}", method.getName(), paramNames);
         Class<?>[] paramTypes = method.getParameterTypes();
 
         /*for (Map.Entry<String, Object> m : map.entrySet()) {
@@ -283,16 +289,16 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                 args[i] = request;
             } else if (paramTypes[i].isAssignableFrom(ApiRequest.class)) {
                 args[i] = apiRequest;
-            } else if (paramMap.containsKey(paramNames.get(i))) {
+            } else if (paramMap.containsKey(paramNames[i])) {
                 try {
-                    args[i] = convertJsonToBean(paramMap.get(paramNames.get(i)), paramTypes[i]);
+                    args[i] = convertJsonToBean(paramMap.get(paramNames[i]), paramTypes[i]);
                     // 验证带 @Valid 注解的Bean参数
                     /*if (!BeanUtils.isSimpleProperty(paramTypes[i])
                             && apiRunnable.getMethodParameters().get(i).hasParameterAnnotation(Valid.class)) {
                         validateParamValue(methodParamValidator.validate(args[i]));
                     }*/
                 } catch (Exception e) {
-                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数错误："
+                    throw new ApiException("调用失败：‘" + paramNames[i] + "’参数错误："
                             + e.getMessage());
                 }
             } else if ((resolver = apiRegisterCenter.supportsParameter(apiRunnable.getMethodParameters().get(i))) != null) {
@@ -300,7 +306,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                     args[i] = resolver.resolveArgument(apiRunnable.getMethodParameters().get(i), null,
                             new ServletWebRequest(request), null);
                 } catch (Exception e) {
-                    throw new ApiException("调用失败：‘" + paramNames.get(i) + "’参数错误："
+                    throw new ApiException("调用失败：‘" + paramNames[i] + "’参数错误："
                             + e.getMessage());
                 }
             } else {

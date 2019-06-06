@@ -33,4 +33,9 @@ public @interface ApiMapping {
      */
     boolean needLogin() default true;
 
+    /**
+     * 参数名称列表
+     */
+    String[] paramNames() default {};
+
 }
