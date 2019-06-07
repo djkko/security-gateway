@@ -55,11 +55,11 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     @Autowired
     private MethodParamValidator methodParamValidator;
 
-    private ParameterNameDiscoverer parameterUtils;
+    private ParameterNameDiscoverer parameterNameDiscoverer;
     private ApiRegisterCenter apiRegisterCenter;
 
     public ApiGatewayHandler() {
-        parameterUtils = new DefaultParameterNameDiscoverer();
+        parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
     }
 
     @Override
@@ -272,9 +272,18 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         }
 
         Method method = apiRunnable.getTargetMethod();
+        // 优先通过@ApiMapping的paramNames属性获取参数名列表
         String[] paramNames = apiRunnable.getApiMapping().paramNames();
+        // 如果paramNames未配置，则尝试通过ParameterNameDiscoverer获取
+        if (paramNames == null || paramNames.length == 0) {
+            paramNames = parameterNameDiscoverer.getParameterNames(method);
+        }
         log.info("{} Method ParameterNames：{}", method.getName(), paramNames);
         Class<?>[] paramTypes = method.getParameterTypes();
+
+        if (getMethodArgumentLength(paramTypes) > getMethodArgumentLength(paramNames)) {
+            throw new ApiException("调用失败：参数名列表有误");
+        }
 
         /*for (Map.Entry<String, Object> m : map.entrySet()) {
             if (!paramNames.contains(m.getKey())) {
@@ -330,6 +339,11 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             validMsgBuilder.deleteCharAt(validMsgBuilder.length() - 1);
             throw new RuntimeException(validMsgBuilder.toString());
         }
+    }
+
+    private int getMethodArgumentLength(Object[] objs) {
+        if (objs == null) return 0;
+        return objs.length;
     }
 
     // 将MAP转换成具体的目标方方法参数对象
