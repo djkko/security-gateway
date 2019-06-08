@@ -39,12 +39,12 @@ public class ApiRegisterCenter {
         for (String beanName : beanNames) {
             type = applicationContext.getType(beanName);
             obj = applicationContext.getBean(beanName);
-            // log.info("【ApiGateway】Find Bean：{}, Type：{}，obj：{}", beanName, type, obj);
+            // log.debug("【ApiGateway】Find Bean：{}, Type：{}，obj：{}", beanName, type, obj);
 
             // 获取自定义的 HandlerMethodArgumentResolver
             if (!type.getName().startsWith("org.springframework")
                     && obj != null && obj instanceof HandlerMethodArgumentResolver) {
-                log.info("【ApiGateway】Find HandlerMethodArgumentResolver：{}", type.getName());
+                log.debug("【ApiGateway】Find HandlerMethodArgumentResolver：{}", type.getName());
                 methodArgumentResolvers.add((HandlerMethodArgumentResolver) obj);
             }
 
@@ -88,7 +88,7 @@ public class ApiRegisterCenter {
             apiRunnable.getMethodParameters().add(new MethodParameter(method, i));
         }
         // Add to ApiRunnable Map
-        log.info("【ApiGateway】Find Api：{}", apiRunnable.toString());
+        log.debug("【ApiGateway】Find Api：{}", apiRunnable.toString());
         apiMap.put(apiRunnable.apiName, apiRunnable);
     }
 

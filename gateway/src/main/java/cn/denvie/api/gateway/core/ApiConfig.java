@@ -153,7 +153,8 @@ public class ApiConfig {
 
         return new ApiInvokeInterceptor() {
             @Override
-            public void before(ApiRequest request, Object[] args) {
+            public InvokeCode before(ApiRequest request, Object[] args) {
+                return null;
             }
 
             @Override
