@@ -6,7 +6,8 @@
 * 参数加密方式支持Base64、AES、RSA，可通过配置文件设置
 * 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
 * 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数
-* 支持方法参数添加@Valid注解进行参数校验
+* 支持方法参数添加@Valid注解进行参数校验  
+* 支持自定义ApiInvokeInterceptor实现请求接口监控
 
 #### 用法
 (1). 创建数据库和表
@@ -82,6 +83,7 @@ public class UserServiceImpl implements UserService {
 value：接口名，需全局唯一  
 needLogin：是否需要登录鉴权  
 needParams：是否做参数判空校验  
+paramNames：接口参数名列表（建议通过注解设置，防止部分环境下字节码解析获取不到参数名）  
 
 传参方式为“FORM”时的接口的调用格式为：
 ```
@@ -184,6 +186,31 @@ public class InvokExceptionHandlerImpl implements InvokExceptionHandler {
     @Override
     public ApiResponse handle(ApiRequest apiRequest, Throwable e) {
         return null;
+    }
+}
+```
+
+#### 自定义接口请求拦截器ApiInvokeInterceptor的实现
+```
+import cn.denvie.api.gateway.common.ApiInvokeInterceptor;
+import cn.denvie.api.gateway.common.InvokeCode;
+import cn.denvie.api.gateway.core.ApiRequest;
+
+public class ApiInvokeInterceptorImpl implements ApiInvokeInterceptor {
+    @Override
+    public InvokeCode before(ApiRequest request, Object[] args) {
+        // 如果返回的InvokeCode不为空，则中断接口的调用
+        return null;
+    }
+
+    @Override
+    public void error(ApiRequest request, Throwable t) {
+
+    }
+
+    @Override
+    public void after(ApiRequest request, Object result) {
+
     }
 }
 ```
