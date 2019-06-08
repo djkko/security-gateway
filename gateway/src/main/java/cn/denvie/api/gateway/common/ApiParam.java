@@ -1,6 +1,5 @@
 package cn.denvie.api.gateway.common;
 
-import cn.denvie.api.gateway.core.ApiGatewayHandler;
 import cn.denvie.api.gateway.utils.HttpServletRequestReader;
 import cn.denvie.api.gateway.utils.JsonUtils;
 import org.slf4j.Logger;

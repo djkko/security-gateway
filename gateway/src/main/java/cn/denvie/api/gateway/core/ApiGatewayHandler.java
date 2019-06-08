@@ -54,6 +54,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     ApiProperties apiProperties;
     @Autowired
     private MethodParamValidator methodParamValidator;
+    @Autowired
+    private ApiInvokeInterceptor apiInvokeInterceptor;
 
     private ParameterNameDiscoverer parameterNameDiscoverer;
     private ApiRegisterCenter apiRegisterCenter;
@@ -101,21 +103,27 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
             Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
             log.info(httpMethod + "调用接口【{}】，参数：{}", originalApiParam.getName(), apiRequest.getParams());
-            apiResponse = responseService.success(apiRunnable.run(args));
+            apiInvokeInterceptor.before(apiRequest, args);
+            Object resultData = apiRunnable.run(args);
+            apiInvokeInterceptor.after(apiRequest, resultData);
+            apiResponse = responseService.success(resultData);
         } catch (ApiException e) {
             log.error("调用接口【{}】异常：{}，参数：{}",
                     originalApiParam.getName(), e.getMessage(), originalApiParam.getParams()/*, e*/);
+            apiInvokeInterceptor.error(apiRequest, e);
             apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
         } catch (InvocationTargetException e) {
             Throwable t = e.getTargetException() == null ? e : e.getTargetException();
             String errMsg = t.getMessage();
             log.error("调用接口【{}】异常：{}，参数：{}",
                     originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
+            apiInvokeInterceptor.error(apiRequest, e);
             e.printStackTrace();
             apiResponse = invokeExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
             log.error("调用接口【{}】异常：{}，参数：{}",
                     originalApiParam.getName(), e.toString(), originalApiParam.getParams());
+            apiInvokeInterceptor.error(apiRequest, e);
             e.printStackTrace();
             apiResponse = invokeExceptionHandler.handle(apiRequest, e);
         }
@@ -274,12 +282,12 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         Method method = apiRunnable.getTargetMethod();
         // 优先通过@ApiMapping的paramNames属性获取参数名列表
         String[] paramNames = apiRunnable.getApiMapping().paramNames();
-        // 如果paramNames未配置，则尝试通过ParameterNameDiscoverer获取
-        if (paramNames == null || paramNames.length == 0) {
-            paramNames = parameterNameDiscoverer.getParameterNames(method);
-        }
         log.info("{} Method ParameterNames：{}", method.getName(), paramNames);
         Class<?>[] paramTypes = method.getParameterTypes();
+        // 如果paramNames未配置，则尝试通过ParameterNameDiscoverer获取
+        if (getMethodArgumentLength(paramTypes) > 0 && (paramNames == null || paramNames.length == 0)) {
+            paramNames = parameterNameDiscoverer.getParameterNames(method);
+        }
 
         if (getMethodArgumentLength(paramTypes) > getMethodArgumentLength(paramNames)) {
             throw new ApiException("调用失败：参数名列表有误");

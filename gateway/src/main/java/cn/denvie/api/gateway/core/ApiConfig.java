@@ -144,4 +144,26 @@ public class ApiConfig {
         };
     }
 
+    /**
+     * 默认的API接口请求拦截器。
+     */
+    @Bean
+    @ConditionalOnMissingBean(ApiInvokeInterceptor.class)
+    public ApiInvokeInterceptor apiInvokeInterceptor() {
+
+        return new ApiInvokeInterceptor() {
+            @Override
+            public void before(ApiRequest request, Object[] args) {
+            }
+
+            @Override
+            public void error(ApiRequest request, Throwable t) {
+            }
+
+            @Override
+            public void after(ApiRequest request, Object result) {
+            }
+        };
+    }
+
 }
