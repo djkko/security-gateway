@@ -17,7 +17,7 @@ public class ApiProperties {
     /**
      * 加密方式
      */
-    private EnctyptType enctyptType = ApiConfig.ENCTYPT_TYPE;
+    private EnctyptType encryptType = ApiConfig.ENCTYPT_TYPE;
     /**
      * 是否启用客户端与服务端时间差校验
      */
@@ -54,13 +54,17 @@ public class ApiProperties {
      * 传参方式，默认为：BODY
      */
     private ParamType paramType = ApiConfig.DEFAULT_PARAM_TYPE;
+    /**
+     * 是否开户日志打印
+     */
+    private boolean enableLogging = ApiConfig.ENABLE_LOGGING;
 
-    public EnctyptType getEnctyptType() {
-        return enctyptType;
+    public EnctyptType getEncryptType() {
+        return encryptType;
     }
 
-    public void setEnctyptType(EnctyptType enctyptType) {
-        this.enctyptType = enctyptType;
+    public void setEncryptType(EnctyptType encryptType) {
+        this.encryptType = encryptType;
     }
 
     public boolean isCheckTimestamp() {
@@ -133,5 +137,13 @@ public class ApiProperties {
 
     public void setParamType(ParamType paramType) {
         this.paramType = paramType;
+    }
+
+    public boolean isEnableLogging() {
+        return enableLogging;
+    }
+
+    public void setEnableLogging(boolean enableLogging) {
+        this.enableLogging = enableLogging;
     }
 }

@@ -22,7 +22,7 @@ public class ApiException extends Exception {
 
     public ApiException(String code, String message) {
         super(message);
-        this.code = message;
+        this.code = code;
     }
 
     public String getCode() {

@@ -56,6 +56,11 @@ public class ApiConfig {
      */
     public static final ParamType DEFAULT_PARAM_TYPE = ParamType.BODY;
 
+    /**
+     * 是否开启日志输出
+     */
+    public static final boolean ENABLE_LOGGING = false;
+
     ///////////////////////////////////////////////////////////////////////////
     // Default Service Implement
     ///////////////////////////////////////////////////////////////////////////

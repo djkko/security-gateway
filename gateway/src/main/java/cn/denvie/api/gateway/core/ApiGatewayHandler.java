@@ -66,7 +66,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
     @Override
     public void setApplicationContext(ApplicationContext context) throws BeansException {
-        apiRegisterCenter = new ApiRegisterCenter(context);
+        apiRegisterCenter = new ApiRegisterCenter(context, apiProperties);
     }
 
     @Override
@@ -97,12 +97,14 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             // 登录验证
             if (apiRunnable.getApiMapping().needLogin()) {
                 if (!apiRequest.isLogin()) {
-                    throw new ApiException(ApiCode.TOKEN_UN_LOGIN);
+                    throw new ApiException(ApiCode.CHECK_TOKEN_UN_LOGIN);
                 }
             }
 
             Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
-            log.debug(httpMethod + "调用接口【{}】，参数：{}", originalApiParam.getName(), apiRequest.getParams());
+            if (apiProperties.isEnableLogging()) {
+                log.debug(httpMethod + "调用接口【{}】，参数：{}", originalApiParam.getName(), apiRequest.getParams());
+            }
 
             // 如果ApiInvokeInterceptor返回不为null，将中断接口的执行
             InvokeCode invokeCode = apiInvokeInterceptor.before(apiRequest, args);
@@ -114,23 +116,29 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             // 生成响应的结果
             apiResponse = responseService.success(resultData);
         } catch (ApiException e) {
-            log.error("接口【{}】调用异常：{}，参数：{}",
-                    originalApiParam.getName(), e.getMessage(), originalApiParam.getParams()/*, e*/);
+            if (apiProperties.isEnableLogging()) {
+                log.error("接口【{}】调用异常：{}，参数：{}",
+                        originalApiParam.getName(), e.getMessage(), originalApiParam.getParams()/*, e*/);
+            }
             apiInvokeInterceptor.error(apiRequest, e);
             apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
         } catch (InvocationTargetException e) {
-            Throwable t = e.getTargetException() == null ? e : e.getTargetException();
-            String errMsg = t.getMessage();
-            log.error("接口【{}】调用异常：{}，参数：{}",
-                    originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
-            apiInvokeInterceptor.error(apiRequest, e);
             e.printStackTrace();
+            Throwable t = e.getTargetException() == null ? e : e.getTargetException();
+            if (apiProperties.isEnableLogging()) {
+                String errMsg = t.getMessage();
+                log.error("接口【{}】调用异常：{}，参数：{}",
+                        originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
+            }
+            apiInvokeInterceptor.error(apiRequest, t);
             apiResponse = invokeExceptionHandler.handle(apiRequest, t);
         } catch (Exception e) {
-            log.error("接口【{}】调用异常：{}，参数：{}",
-                    originalApiParam.getName(), e.toString(), originalApiParam.getParams());
-            apiInvokeInterceptor.error(apiRequest, e);
             e.printStackTrace();
+            if (apiProperties.isEnableLogging()) {
+                log.error("接口【{}】调用异常：{}，参数：{}",
+                        originalApiParam.getName(), e.toString(), originalApiParam.getParams());
+            }
+            apiInvokeInterceptor.error(apiRequest, e);
             apiResponse = invokeExceptionHandler.handle(apiRequest, e);
         }
 
@@ -234,16 +242,16 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
     private void decryptParams(ApiRequest apiRequest) throws ApiException {
         try {
-            if (apiProperties.getEnctyptType() == EnctyptType.AES) {
+            if (apiProperties.getEncryptType() == EnctyptType.AES) {
                 String temp = apiRequest.getParams();
                 temp = AESUtils.decryptStringFromBase64(temp, apiRequest.getSecret());
                 apiRequest.setParams(temp);
-            } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
+            } else if (apiProperties.getEncryptType() == EnctyptType.RSA) {
                 String privateKey = apiRequest.getPrivateScret();
                 String temp = apiRequest.getParams();
                 temp = RSAUtils.decryptByPrivateKey(privateKey, temp);
                 apiRequest.setParams(temp);
-            } else if (apiProperties.getEnctyptType() == EnctyptType.BASE64) {
+            } else if (apiProperties.getEncryptType() == EnctyptType.BASE64) {
                 String temp = apiRequest.getParams();
                 temp = new String(Base64Utils.decodeFromString(temp));
                 apiRequest.setParams(temp);
@@ -262,7 +270,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         } else if (StringUtils.isEmpty(originalApiParam.getSign())) {
             throw new ApiException(ApiCode.API_SIGN_NULL);
         } else if ((api = apiRegisterCenter.findApiRunnable(originalApiParam.getName())) == null) {
-            throw new ApiException(ApiCode.API_UNEXIST);
+            throw new ApiException(ApiCode.API_UN_EXIST);
         }
         if (api.getApiMapping().needParams() && StringUtils.isEmpty(originalApiParam.getParams())) {
             throw new ApiException(ApiCode.API_PARAMS_NULL);
@@ -288,7 +296,9 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         Method method = apiRunnable.getTargetMethod();
         // 优先通过@ApiMapping的paramNames属性获取参数名列表
         String[] paramNames = apiRunnable.getApiMapping().paramNames();
-        log.debug("{} Method ParameterNames：{}", method.getName(), paramNames);
+        if (apiProperties.isEnableLogging()) {
+            log.debug("{} Method ParameterNames：{}", method.getName(), paramNames);
+        }
         Class<?>[] paramTypes = method.getParameterTypes();
         // 如果paramNames未配置，则尝试通过ParameterNameDiscoverer获取
         if (getMethodArgumentLength(paramTypes) > 0 && (paramNames == null || paramNames.length == 0)) {
@@ -399,7 +409,9 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                 response.getWriter().write(json);
             }
         } catch (Exception e) {
-            log.error("服务器响应异常：{}", e.toString());
+            if (apiProperties.isEnableLogging()) {
+                log.error("服务器响应异常：{}", e.toString());
+            }
             throw new RuntimeException(e);
         }
     }

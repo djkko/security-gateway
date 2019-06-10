@@ -115,7 +115,7 @@ sign：参数签名
 #### API网关配置项（如不设置，则默认值为以下各项的值）
 ```
 ## 参数加密方式，目前支持：Base64、AES、RSA
-cn.denvie.api.enctyptType=AES
+cn.denvie.api.encryptType=AES
 ## AES加密算法密钥（16位），若不配置，则自动生成
 cn.denvie.api.aesKey=
 ## RSA加密算法公钥，若不配置，则自动生成
@@ -132,8 +132,10 @@ cn.denvie.api.checkDevice=true
 cn.denvie.api.tokenValidTime=1209600000
 ## 多设备登录策略：ALLOW（允许同时登录）、REPLACE（挤掉对方）、REFUSE（拒绝登录）
 cn.denvie.api.multiDeviceLogin=REPLACE
-## 传参方式：FORM、BODY，默认为：BODY
+## 传参方式：FORM、BODY
 cn.denvie.api.paramType=BODY
+## 是否开启日志输出
+cn.denvie.api.enableLogging=false
 ```
 
 #### 自定义接口调用结果ResponseService的实现

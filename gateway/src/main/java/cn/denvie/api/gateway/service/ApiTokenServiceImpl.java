@@ -129,14 +129,14 @@ public class ApiTokenServiceImpl implements ApiTokenService {
     }
 
     private void generateSecretKey(ApiToken apiToken) throws ApiException {
-        if (apiProperties.getEnctyptType() == EnctyptType.AES) {
+        if (apiProperties.getEncryptType() == EnctyptType.AES) {
             // 如果没配置aesKey，则由程序生成
             if (StringUtils.isEmpty(apiProperties.getAesKey())) {
                 apiToken.setSecret(RandomUtils.generateSecret());
             } else {
                 apiToken.setSecret(apiProperties.getAesKey());
             }
-        } else if (apiProperties.getEnctyptType() == EnctyptType.RSA) {
+        } else if (apiProperties.getEncryptType() == EnctyptType.RSA) {
             // 如果没配置rsaPublicKey和rsaPrivateKey，则由程序生成
             if (StringUtils.isEmpty(apiProperties.getRsaPublicKey())
                     || StringUtils.isEmpty(apiProperties.getRsaPrivateKey())) {
