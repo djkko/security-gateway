@@ -25,12 +25,10 @@ public class ApiRegisterCenter {
     private ApplicationContext applicationContext;
     private ConcurrentHashMap<String, ApiRunnable> apiMap = new ConcurrentHashMap();
     private List<HandlerMethodArgumentResolver> methodArgumentResolvers = new ArrayList<>();
-    private ApiProperties apiProperties;
 
     // spring ioc
-    public ApiRegisterCenter(ApplicationContext applicationContext, ApiProperties apiProperties) {
+    public ApiRegisterCenter(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-        this.apiProperties = apiProperties;
     }
 
     public void loadApiFromSpringBeans() {
@@ -46,9 +44,7 @@ public class ApiRegisterCenter {
             // 获取自定义的 HandlerMethodArgumentResolver
             if (!type.getName().startsWith("org.springframework")
                     && obj != null && obj instanceof HandlerMethodArgumentResolver) {
-                if (apiProperties.isEnableLogging()) {
-                    log.debug("【ApiGateway】Find HandlerMethodArgumentResolver：{}", type.getName());
-                }
+                log.debug("【ApiGateway】Find HandlerMethodArgumentResolver：{}", type.getName());
                 methodArgumentResolvers.add((HandlerMethodArgumentResolver) obj);
             }
 
@@ -92,9 +88,7 @@ public class ApiRegisterCenter {
             apiRunnable.getMethodParameters().add(new MethodParameter(method, i));
         }
         // Add to ApiRunnable Map
-        if (apiProperties.isEnableLogging()) {
-            log.debug("【ApiGateway】Find Api：{}", apiRunnable.toString());
-        }
+        log.debug("【ApiGateway】Find Api：{}", apiRunnable.toString());
         apiMap.put(apiRunnable.apiName, apiRunnable);
     }
 

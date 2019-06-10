@@ -22,7 +22,7 @@
 
     <groupId>cn.denvie</groupId>
     <artifactId>api-gateway</artifactId>
-    <version>1.2.6</version>
+    <version>1.2.7</version>
     <packaging>jar</packaging>
 
     <properties>

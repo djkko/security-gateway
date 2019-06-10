@@ -66,7 +66,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
 
     @Override
     public void setApplicationContext(ApplicationContext context) throws BeansException {
-        apiRegisterCenter = new ApiRegisterCenter(context, apiProperties);
+        apiRegisterCenter = new ApiRegisterCenter(context);
     }
 
     @Override
