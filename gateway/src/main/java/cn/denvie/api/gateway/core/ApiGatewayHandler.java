@@ -1,10 +1,7 @@
 package cn.denvie.api.gateway.core;
 
 import cn.denvie.api.gateway.common.*;
-import cn.denvie.api.gateway.service.ApiTokenService;
-import cn.denvie.api.gateway.service.InvokeExceptionHandler;
-import cn.denvie.api.gateway.service.ResponseService;
-import cn.denvie.api.gateway.service.SignatureService;
+import cn.denvie.api.gateway.service.*;
 import cn.denvie.api.gateway.utils.AESUtils;
 import cn.denvie.api.gateway.utils.JsonUtils;
 import cn.denvie.api.gateway.utils.RSAUtils;
@@ -48,6 +45,8 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     private ResponseService responseService;
     @Autowired
     private SignatureService signatureService;
+    @Autowired
+    private SubSignatureService subSignatureService;
     @Autowired
     InvokeExceptionHandler invokeExceptionHandler;
     @Autowired
@@ -101,49 +100,103 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                 }
             }
 
-            Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
-            if (apiProperties.isEnableLogging()) {
-                log.debug(httpMethod + "调用接口【{}】，参数：{}", originalApiParam.getName(), apiRequest.getParams());
-            }
-
-            // 如果ApiInvokeInterceptor返回不为null，将中断接口的执行
-            InvokeCode invokeCode = apiInvokeInterceptor.before(apiRequest, args);
-            if (invokeCode != null) {
-                throw new ApiException(invokeCode.getCode(), invokeCode.getMessage());
-            }
-            Object resultData = apiRunnable.run(args);
-            apiInvokeInterceptor.after(apiRequest, resultData);
-            // 生成响应的结果
-            apiResponse = responseService.success(resultData);
+            // 调用接口
+            apiResponse = doInvokeApi(request, response, httpMethod, originalApiParam, apiRunnable, apiRequest);
         } catch (ApiException e) {
-            if (apiProperties.isEnableLogging()) {
-                log.error("接口【{}】调用异常：{}，参数：{}",
-                        originalApiParam.getName(), e.getMessage(), originalApiParam.getParams()/*, e*/);
-            }
-            apiInvokeInterceptor.error(apiRequest, e);
-            apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
+            apiResponse = doAfterApiException(originalApiParam, apiRequest, e);
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
-            Throwable t = e.getTargetException() == null ? e : e.getTargetException();
-            if (apiProperties.isEnableLogging()) {
-                String errMsg = t.getMessage();
-                log.error("接口【{}】调用异常：{}，参数：{}",
-                        originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
-            }
-            apiInvokeInterceptor.error(apiRequest, t);
-            apiResponse = invokeExceptionHandler.handle(apiRequest, t);
+            apiResponse = doAfterInvocationTargetException(originalApiParam, apiRequest, e);
         } catch (Exception e) {
-            e.printStackTrace();
-            if (apiProperties.isEnableLogging()) {
-                log.error("接口【{}】调用异常：{}，参数：{}",
-                        originalApiParam.getName(), e.toString(), originalApiParam.getParams());
-            }
-            apiInvokeInterceptor.error(apiRequest, e);
-            apiResponse = invokeExceptionHandler.handle(apiRequest, e);
+            apiResponse = doAfterException(originalApiParam, apiRequest, e);
         }
 
         // 统一返回结果
         returnResult(apiResponse, response);
+    }
+
+    public void handleSub(HttpServletRequest request, HttpServletResponse response, String httpMethod) {
+        ApiParam originalApiParam = resolveApiParam(request);
+        ApiResponse apiResponse;
+        ApiRegisterCenter.ApiRunnable apiRunnable;
+        ApiRequest apiRequest = null;
+        try {
+            // 系统参数验证
+            apiRunnable = validateSubParams(originalApiParam);
+            // 构建ApiRequest
+            apiRequest = buildApiRequest(originalApiParam);
+            // 注入密钥
+            apiRequest.setSecret(apiProperties.getSubSecret());
+            apiRequest.setPrivateScret(apiProperties.getSubPrivateSecret());
+            // 验证签名和参数
+            checkSubSignAndParams(apiRequest);
+
+            // 调用接口
+            apiResponse = doInvokeApi(request, response, httpMethod, originalApiParam, apiRunnable, apiRequest);
+        } catch (ApiException e) {
+            apiResponse = doAfterApiException(originalApiParam, apiRequest, e);
+        } catch (InvocationTargetException e) {
+            apiResponse = doAfterInvocationTargetException(originalApiParam, apiRequest, e);
+        } catch (Exception e) {
+            apiResponse = doAfterException(originalApiParam, apiRequest, e);
+        }
+
+        // 统一返回结果
+        returnResult(apiResponse, response);
+    }
+
+    private ApiResponse doInvokeApi(HttpServletRequest request, HttpServletResponse response, String httpMethod,
+                                    ApiParam originalApiParam, ApiRegisterCenter.ApiRunnable apiRunnable, ApiRequest apiRequest) throws Exception {
+        Object[] args = buildParams(apiRunnable, apiRequest.getParams(), request, response, apiRequest);
+        if (apiProperties.isEnableLogging()) {
+            log.debug(httpMethod + "调用接口【{}】，参数：{}", originalApiParam.getName(), apiRequest.getParams());
+        }
+
+        // 如果ApiInvokeInterceptor返回不为null，将中断接口的执行
+        InvokeCode invokeCode = apiInvokeInterceptor.before(apiRequest, args);
+        if (invokeCode != null) {
+            throw new ApiException(invokeCode.getCode(), invokeCode.getMessage());
+        }
+        Object resultData = apiRunnable.run(args);
+        apiInvokeInterceptor.after(apiRequest, resultData);
+        // 生成响应的结果
+        return responseService.success(resultData);
+    }
+
+    private ApiResponse doAfterException(ApiParam originalApiParam, ApiRequest apiRequest, Exception e) {
+        ApiResponse apiResponse;
+        e.printStackTrace();
+        if (apiProperties.isEnableLogging()) {
+            log.error("接口【{}】调用异常：{}，参数：{}",
+                    originalApiParam.getName(), e.toString(), originalApiParam.getParams());
+        }
+        apiInvokeInterceptor.error(apiRequest, e);
+        apiResponse = invokeExceptionHandler.handle(apiRequest, e);
+        return apiResponse;
+    }
+
+    private ApiResponse doAfterInvocationTargetException(ApiParam originalApiParam, ApiRequest apiRequest, InvocationTargetException e) {
+        ApiResponse apiResponse;
+        e.printStackTrace();
+        Throwable t = e.getTargetException() == null ? e : e.getTargetException();
+        if (apiProperties.isEnableLogging()) {
+            String errMsg = t.getMessage();
+            log.error("接口【{}】调用异常：{}，参数：{}",
+                    originalApiParam.getName(), errMsg, originalApiParam.getParams()/*, e.getTargetException()*/);
+        }
+        apiInvokeInterceptor.error(apiRequest, t);
+        apiResponse = invokeExceptionHandler.handle(apiRequest, t);
+        return apiResponse;
+    }
+
+    private ApiResponse doAfterApiException(ApiParam originalApiParam, ApiRequest apiRequest, ApiException e) {
+        ApiResponse apiResponse;
+        if (apiProperties.isEnableLogging()) {
+            log.error("接口【{}】调用异常：{}，参数：{}",
+                    originalApiParam.getName(), e.getMessage(), originalApiParam.getParams()/*, e*/);
+        }
+        apiInvokeInterceptor.error(apiRequest, e);
+        apiResponse = responseService.error(e.getCode(), e.getMessage(), null);
+        return apiResponse;
     }
 
     /**
@@ -240,6 +293,29 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         return apiRequest;
     }
 
+    // 参数解密、验证签名、时间差
+    private ApiRequest checkSubSignAndParams(ApiRequest apiRequest) throws ApiException {
+        // 生成签名
+        String sign = subSignatureService.sign(apiRequest);
+        // 验证签名
+        if (StringUtils.isEmpty(sign) || !sign.equals(apiRequest.getSign())) {
+            throw new ApiException(ApiCode.CHECK_SIGN_INVALID);
+        }
+
+        // 解密params参数值
+        if (!StringUtils.isEmpty(apiRequest.getParams())) {
+            decryptParams(apiRequest);
+        }
+
+        // 时间差校验
+        long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
+        if (apiProperties.isCheckTimestamp() && diffTime > apiProperties.getTimestampDiffer()) {
+            throw new ApiException(ApiCode.CHECK_TIME_INVALID);
+        }
+
+        return apiRequest;
+    }
+
     private void decryptParams(ApiRequest apiRequest) throws ApiException {
         try {
             if (apiProperties.getEncryptType() == EnctyptType.AES) {
@@ -276,6 +352,18 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             throw new ApiException(ApiCode.API_PARAMS_NULL);
         }
         return api;
+    }
+
+    private ApiRegisterCenter.ApiRunnable validateSubParams(ApiParam subParam) throws ApiException {
+        ApiRegisterCenter.ApiRunnable apiSub;
+        if (StringUtils.isEmpty(subParam.getName())) {
+            throw new ApiException(ApiCode.API_NAME_NULL);
+        } else if (StringUtils.isEmpty(subParam.getSign())) {
+            throw new ApiException(ApiCode.API_SIGN_NULL);
+        } else if ((apiSub = apiRegisterCenter.findApiRunnable(subParam.getName())) == null) {
+            throw new ApiException(ApiCode.API_UN_EXIST);
+        }
+        return apiSub;
     }
 
     /***

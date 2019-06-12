@@ -48,12 +48,23 @@ public interface ApiTokenRepository extends JpaRepository<ApiToken, Long> {
     /**
      * 根据用户Id删除ApiToken。
      *
-     * @param userId     用户Id
+     * @param userId 用户Id
      * @return
      */
     @Transactional
     @Modifying
     @Query("DELETE FROM ApiToken AT WHERE AT.userId = :userId")
     int deleteByUserIdEquals(@Param("userId") String userId);
+
+    /**
+     * 更新指定Token失效时间
+     *
+     * @param token      Token
+     * @param expireTime 新的失效时间
+     */
+    @Transactional
+    @Modifying
+    @Query("UPDATE ApiToken AT SET AT.expireTime = :expireTime WHERE AT.accessToken = :token")
+    void updateExpireTimeByToken(@Param("token") String token, @Param("expireTime") long expireTime);
 
 }

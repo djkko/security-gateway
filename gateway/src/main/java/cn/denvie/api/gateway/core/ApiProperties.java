@@ -58,6 +58,14 @@ public class ApiProperties {
      * 是否开户日志打印
      */
     private boolean enableLogging = ApiConfig.ENABLE_LOGGING;
+    /**
+     * Sub Api 的AES私钥或者RSA公钥
+     */
+    private String subSecret = ApiConfig.SUB_SECRET;
+    /**
+     * Sub Api 的RSA私钥
+     */
+    private String subPrivateSecret = "";
 
     public EnctyptType getEncryptType() {
         return encryptType;
@@ -145,5 +153,21 @@ public class ApiProperties {
 
     public void setEnableLogging(boolean enableLogging) {
         this.enableLogging = enableLogging;
+    }
+
+    public String getSubSecret() {
+        return subSecret;
+    }
+
+    public void setSubSecret(String subSecret) {
+        this.subSecret = subSecret;
+    }
+
+    public String getSubPrivateSecret() {
+        return subPrivateSecret;
+    }
+
+    public void setSubPrivateSecret(String subPrivateSecret) {
+        this.subPrivateSecret = subPrivateSecret;
     }
 }

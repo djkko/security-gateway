@@ -3,7 +3,9 @@ package cn.denvie.api;
 import cn.denvie.api.gateway.core.ApiConfig;
 import cn.denvie.api.gateway.core.ApiRequest;
 import cn.denvie.api.gateway.service.SignatureService;
+import cn.denvie.api.gateway.service.SubSignatureService;
 import cn.denvie.api.gateway.utils.AESUtils;
+import cn.denvie.api.gateway.utils.MD5Utils;
 import cn.denvie.api.gateway.utils.RSAUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -17,10 +19,13 @@ public class ApiTest {
     static final String CHARSET = "UTF-8";
 
     private SignatureService signatureService;
+    private SubSignatureService subSignatureService;
 
     @Before
     public void init() {
-        signatureService = new ApiConfig().signatureService();
+        ApiConfig apiConfig = new ApiConfig();
+        signatureService = apiConfig.signatureService();
+        subSignatureService = apiConfig.subSignatureService();
     }
 
     @Ignore
@@ -82,12 +87,54 @@ public class ApiTest {
     @Ignore
     @Test
     public void decrypt() throws Exception {
-        String key = "76833c9a79718a56";
+        String key = "2f361dabda73e46f";
         String text = "{\"coinType\":\"TOP\",\"amount\":12.34,\"orderNo\":\"order-00001\",\"pushUrl\":\"http://127.0.0.1/mall/order/confirm\"}";
         String s = AESUtils.encryptToBase64(text, key);
-        String result = AESUtils.decryptStringFromBase64("YCBXw0J4V/pyNaBUj7ctjG6G+pyO0lcWUK6Cbgb99wZI62Zjq//Tmd/Qsf+PxNWlEuGDJi1mWRoX" +
-                "Oql63pl32JUZTo/qQRWx+KwQwLaUjzUwwdEQRuQFLQDqv0q8dMmFUH7Cw5NGz1mcFc2zOLC6yw==", key);
+        String result = AESUtils.decryptStringFromBase64("fvu94T0cHtF5ghwSt736GUS11BeTOEqhqu9ezPAPi1H69ygDmzdSKZMwfj6Aw03Ep5AqN32de/Up8iRfwz8KYQ==", key);
         System.out.println(result);
+    }
+
+    @Ignore
+    @Test
+    public void testSign() {
+        String apiName = "/Api/User/getCoinList";
+        String accessToken = "faee9b97570e4a839c01d38db0a42b9c";
+        String secret = "b207314fbbf33bb4";
+        String params = "468ia0FzsAVKYAaIQgI4PnEVnfv5Mf/vOahe/AnB0IQNzMI13M4sCjX1R3KLME2t";
+        String timestamp = "1560320823";
+        StringBuilder keyBuilder = new StringBuilder();
+        keyBuilder.append(secret)
+                .append(apiName)
+                .append(params)
+                .append(accessToken)
+                .append(timestamp)
+                .append(secret);
+        String sign = keyBuilder.toString();
+        System.err.println(sign);
+        System.err.println(MD5Utils.md5(sign).toUpperCase());
+    }
+
+    @Ignore
+    @Test
+    public void testSubApi() throws Exception {
+        System.out.println("========== 生成AES请求参数 ==========");
+        String apiName = "user_list";
+        String secret = "safe_api_gateway";
+        String params = AESUtils.encryptToBase64("{\"name\":\"user111\"}", secret);
+        String time = System.currentTimeMillis() + "";
+
+        ApiRequest request = new ApiRequest();
+        request.setApiName(apiName);
+        request.setParams(params);
+        request.setSecret(secret);
+        request.setTimestamp(time);
+        String sign = subSignatureService.sign(request);
+
+        System.out.println("name：" + apiName);
+        System.out.println("params：" + params);
+        System.out.println("secret：" + secret);
+        System.out.println("timestamp：" + time);
+        System.out.println("sign：" + sign);
     }
 
 }

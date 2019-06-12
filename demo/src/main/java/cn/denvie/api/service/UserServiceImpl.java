@@ -64,9 +64,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @ApiMapping(value = "user_list")
-    public List<User> list(HttpServletRequest request, ApiRequest apiRequest) {
+    public List<User> list(String name, HttpServletRequest request, ApiRequest apiRequest) {
+        System.out.println("name: " + name);
         System.out.println("RemoteAddr: " + request.getRemoteAddr());
-        System.out.println("MemberId(: " + apiRequest.getMemberId());
         return new ArrayList<>(sUserMap.values());
     }
 

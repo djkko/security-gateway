@@ -4,6 +4,7 @@ import cn.denvie.api.gateway.common.*;
 import cn.denvie.api.gateway.service.InvokeExceptionHandler;
 import cn.denvie.api.gateway.service.ResponseService;
 import cn.denvie.api.gateway.service.SignatureService;
+import cn.denvie.api.gateway.service.SubSignatureService;
 import cn.denvie.api.gateway.utils.MD5Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -60,6 +61,11 @@ public class ApiConfig {
      * 是否开启日志输出
      */
     public static final boolean ENABLE_LOGGING = false;
+
+    /**
+     * Sub Api 的AES私钥或者RSA公钥，默认
+     */
+    public static final String SUB_SECRET = "safe_api_gateway";
 
     ///////////////////////////////////////////////////////////////////////////
     // Default Service Implement
@@ -126,6 +132,28 @@ public class ApiConfig {
                         .append(params)
                         .append(accessToken)
                         .append(timestamp)
+                        .append(secret);
+                return MD5Utils.md5(keyBuilder.toString()).toUpperCase();
+            }
+        };
+    }
+
+    /**
+     * SubSignatureService的默认实现，调用方可自定义。
+     */
+    @Bean
+    @ConditionalOnMissingBean(SubSignatureService.class)
+    public SubSignatureService subSignatureService() {
+
+        return new SubSignatureService() {
+            @Override
+            public String sign(ApiRequest param) {
+                String secret = param.getSecret();
+                StringBuilder keyBuilder = new StringBuilder();
+                keyBuilder.append(secret)
+                        .append(param.getApiName())
+                        .append(param.getParams())
+                        .append(param.getTimestamp())
                         .append(secret);
                 return MD5Utils.md5(keyBuilder.toString()).toUpperCase();
             }

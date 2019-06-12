@@ -28,4 +28,11 @@ public interface ApiTokenService {
      */
     ApiToken getToken(String token);
 
+    /**
+     * 更新指定Token失效时间
+     *
+     * @param token Token
+     */
+    void updateExpireTimeByToken(String token);
+
 }

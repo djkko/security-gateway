@@ -73,9 +73,10 @@ spring.datasource.hikari.connection-test-query=SELECT 1
 ```
 @Service
 public class UserServiceImpl implements UserService {
-    @ApiMapping(value = "user_add", needLogin = true, needParams = true)
-    public User add(String username, String password) throws ApiException {
-        return new User();
+    static final String BASE_PATH = "/Api/";
+    @ApiMapping(value = BASE_PATH + "packet/ownerSend", paramNames = {"form"})
+    public CommonResponse ownerSend(@RequestBody PacketSendForm form){
+        return packetService.ownerSend(form);
     }
 }
 ```
@@ -92,7 +93,7 @@ http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"
 传参方式为“BODY”时的接口的调用格式为：http://localhost:8080/api，请求BODY的类型为“application/json”，BODY值格式如下：  
 ```
 {
-	"name": "user_add",
+	"name": "/user/add",
 	"params": "o+bA2FaNZXJYLmEJKTSmXbj9nnydfUYwYUFkEo/vsOQ1QMkNY9EXeqb2hTv7pns9",
 	"token": "d7ce0859e7954c91b448e8930e77fb8b",
 	"clientType": "android",
@@ -100,17 +101,34 @@ http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"
 	"timestamp": "1559552986907",
 	"sign": "3758874B4E8BB86E9F01634035AE376D"
 }
-```
+```  
 
 参数说明如下：  
 name：@ApiMapping定义的接口名  
-params: JSON格式的请求参数  
+params: JSON格式的加密后的请求参数  
 token：Token值  
 clientType：客户端类别，android、ios、web等  
 clientCode：客户端设备唯一标识  
 timestamp：Long类型的请求时间戳  
 sign：参数签名  
 其中，token、clientType、clientCode三个参数的传值同时支持Header及Param方式。
+
+(5). 不需要登录鉴权的接口请求路径为 http://localhost:8080/subApi
+Sub Api 的请求地址：http://localhost:8080/subApi，请求参数示例：
+```
+{
+    "name": "/user/list",
+    "params": "vYqqaGSz6RwQQfLqX18+7omz92Zdplf+HfY1J0uw2uU=",
+    "sign": "A3088A8DD9201EDD20A84A606B033D69",
+    "timestamp": "1560331044605"
+}
+``` 
+
+参数说明如下：  
+name：@ApiMapping定义的接口名  
+params: JSON格式的加密后的请求参数 
+timestamp：Long类型的请求时间戳  
+sign：参数签名  
 
 #### API网关配置项（如不设置，则默认值为以下各项的值）
 ```
@@ -136,6 +154,10 @@ cn.denvie.api.multiDeviceLogin=REPLACE
 cn.denvie.api.paramType=BODY
 ## 是否开启日志输出
 cn.denvie.api.enableLogging=false
+## Sub Api 的AES私钥或者RSA公钥
+cn.denvie.api.subSecret=safe_api_gateway
+## Sub Api 的RSA私钥
+cn.denvie.api.subPrivateSecret=
 ```
 
 #### 自定义接口调用结果ResponseService的实现
@@ -177,14 +199,29 @@ public class SignatureServiceImpl implements SignatureService {
 ```
 默认签名规则：MD5（secret + apiName + token + params + timestamp + secret）.toUpperCase()
 
-#### 自定义接口调用异常处理器InvokExceptionHandler的实现
+#### 自定义Sub Api签名生成规则SubSignatureService的实现
+```
+import cn.denvie.api.gateway.core.ApiRequest;
+import org.springframework.stereotype.Service;
+
+@Service
+public class SubSignatureServiceImpl implements SubSignatureService {
+    @Override
+    public String sign(ApiRequest param) {
+        return null;
+    }
+}
+```
+默认签名规则：MD5（secret + apiName + params + secret）.toUpperCase()
+
+#### 自定义接口调用异常处理器InvokeExceptionHandler的实现
 ```
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
 
 @Service
-public class InvokExceptionHandlerImpl implements InvokExceptionHandler {
+public class InvokeExceptionHandlerImpl implements InvokeExceptionHandler {
     @Override
     public ApiResponse handle(ApiRequest apiRequest, Throwable e) {
         return null;

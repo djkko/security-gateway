@@ -77,7 +77,17 @@ public class ApiTokenServiceImpl implements ApiTokenService {
 
     @Override
     public ApiToken getToken(String token) {
+        if (StringUtils.isEmpty(token)) return null;
+
         return apiTokenRepository.findByAccessToken(token);
+    }
+
+    @Override
+    public void updateExpireTimeByToken(String token) {
+        if (StringUtils.isEmpty(token)) return;
+
+        long expireTime = System.currentTimeMillis() + apiProperties.getTokenValidTime();
+        apiTokenRepository.updateExpireTimeByToken(token, expireTime);
     }
 
     ///////////////////////////////////////////////////////////////////////////
