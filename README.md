@@ -113,8 +113,7 @@ timestamp：Long类型的请求时间戳
 sign：参数签名  
 其中，token、clientType、clientCode三个参数的传值同时支持Header及Param方式。
 
-(5). 不需要登录鉴权的接口请求路径为 http://localhost:8080/subApi
-Sub Api 的请求地址：http://localhost:8080/subApi，请求参数示例：
+(5). 不需要登录鉴权的SubApi的接口请求路径为 http://localhost:8080/subApi，请求参数示例：
 ```
 {
     "name": "/user/list",
@@ -129,6 +128,17 @@ name：@ApiMapping定义的接口名
 params: JSON格式的加密后的请求参数 
 timestamp：Long类型的请求时间戳  
 sign：参数签名  
+
+(6). SpringBoot启动类添加扫描的包路径声明"cn.denvie.api"：
+```
+@SpringBootApplication(scanBasePackages = {"com.demo", "cn.denvie.api"})
+@EntityScan(basePackages = {"com.demo", "cn.denvie.api"})
+@EnableJpaRepositories(basePackages = {"com.demo", "cn.denvie.api"})
+@ServletComponentScan(basePackages = {"com.demo", "cn.denvie.api"})
+public class ToptokenApplication extends SpringBootServletInitializer {
+
+}
+```
 
 #### API网关配置项（如不设置，则默认值为以下各项的值）
 ```
