@@ -7,7 +7,7 @@
 * 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
 * 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数
 * 支持方法参数添加@Valid注解进行参数校验  
-* 支持自定义ApiInvokeInterceptor实现请求接口监控
+* 支持自定义ApiInvokeInterceptor实现请求接口拦截
 
 #### 用法
 (1). 创建数据库和表
@@ -82,9 +82,10 @@ public class UserServiceImpl implements UserService {
 ```
 @ApiMapping的属性说明：  
 value：接口名，需全局唯一  
-needLogin：是否需要登录鉴权  
-needParams：是否做参数判空校验  
+needLogin：是否需要Token校验，默认为true   
 paramNames：接口参数名列表（建议通过注解设置，防止部分环境下字节码解析获取不到参数名）  
+
+(5). 需要Token校验的Api的接口请求路径为 http://localhost:8080/api  
 
 传参方式为“FORM”时的接口的调用格式为：
 ```
@@ -105,15 +106,15 @@ http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"
 
 参数说明如下：  
 name：@ApiMapping定义的接口名  
-params: JSON格式的加密后的请求参数  
+params: JSON格式加密后的请求参数  
 token：Token值  
-clientType：客户端类别，android、ios、web等  
+clientType：客户端类别，Android、iOS、Web等  
 clientCode：客户端设备唯一标识  
 timestamp：Long类型的请求时间戳  
 sign：参数签名  
 其中，token、clientType、clientCode三个参数的传值同时支持Header及Param方式。
 
-(5). 不需要登录鉴权的SubApi的接口请求路径为 http://localhost:8080/subApi，请求参数示例：
+(6). 不需要Token校验的SubApi的接口请求路径为 http://localhost:8080/subApi，请求BODY的参数示例：
 ```
 {
     "name": "/user/list",
@@ -122,14 +123,15 @@ sign：参数签名
     "timestamp": "1560331044605"
 }
 ``` 
+其中，不需要Token校验的接口的@ApiMapping注解必需设置属性needLogin = false！
 
 参数说明如下：  
 name：@ApiMapping定义的接口名  
-params: JSON格式的加密后的请求参数 
+params: JSON格式加密后的请求参数 
 timestamp：Long类型的请求时间戳  
 sign：参数签名  
 
-(6). SpringBoot启动类添加扫描的包路径声明"cn.denvie.api"：
+(6). SpringBoot启动类添加扫描的API网关包路径声明"cn.denvie.api"：
 ```
 @SpringBootApplication(scanBasePackages = {"com.demo", "cn.denvie.api"})
 @EntityScan(basePackages = {"com.demo", "cn.denvie.api"})

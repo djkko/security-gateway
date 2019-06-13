@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
-    @ApiMapping(value = "user_list")
+    @ApiMapping(value = "user_list", needLogin = false)
     public List<User> list(String name, HttpServletRequest request, ApiRequest apiRequest) {
         System.out.println("name: " + name);
         System.out.println("RemoteAddr: " + request.getRemoteAddr());

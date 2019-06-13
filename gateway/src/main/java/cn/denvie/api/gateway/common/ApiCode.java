@@ -27,11 +27,11 @@ public enum ApiCode {
     CHECK_DEVICE_INVALID("10300", "非法设备"),
     CHECK_ENCRYPT_INVALID("10300", "参数解密失败"),
     CHECK_PARAMS_INVALID("10300", "参数格式异常"),
+    CHECK_ILLEGAL_REQUEST("10300", "非法请求"),
     API_NAME_NULL("10400", "执行失败，接口名为空"),
-    API_PARAMS_NULL("10400", "执行失败，参数为空"),
+    API_UN_EXIST("10400", "执行失败，接口不存在"),
     API_TOKEN_NULL("10400", "执行失败，Token为空"),
-    API_SIGN_NULL("10400", "执行失败，签名为空"),
-    API_UN_EXIST("10400", "执行失败，接口不存在");
+    API_SIGN_NULL("10400", "执行失败，签名为空");
 
     private String code;
     private String message;

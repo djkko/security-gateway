@@ -348,9 +348,6 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         } else if ((api = apiRegisterCenter.findApiRunnable(originalApiParam.getName())) == null) {
             throw new ApiException(ApiCode.API_UN_EXIST);
         }
-        if (api.getApiMapping().needParams() && StringUtils.isEmpty(originalApiParam.getParams())) {
-            throw new ApiException(ApiCode.API_PARAMS_NULL);
-        }
         return api;
     }
 
@@ -362,6 +359,10 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
             throw new ApiException(ApiCode.API_SIGN_NULL);
         } else if ((apiSub = apiRegisterCenter.findApiRunnable(subParam.getName())) == null) {
             throw new ApiException(ApiCode.API_UN_EXIST);
+        }
+        // @ApiMapping中的needLogin设置为false的才能通过subApi调用
+        if (apiSub.getApiMapping().needLogin()) {
+            throw new ApiException(ApiCode.CHECK_ILLEGAL_REQUEST);
         }
         return apiSub;
     }
