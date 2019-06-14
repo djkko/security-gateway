@@ -16,6 +16,8 @@ import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
@@ -74,6 +76,9 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     }
 
     public void handle(HttpServletRequest request, HttpServletResponse response, String httpMethod) {
+        // 将request和response放入RequestContextHolder中
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+
         ApiParam originalApiParam = resolveApiParam(request);
         ApiResponse apiResponse;
         ApiRegisterCenter.ApiRunnable apiRunnable;
@@ -115,6 +120,9 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     }
 
     public void handleSub(HttpServletRequest request, HttpServletResponse response, String httpMethod) {
+        // 将request和response放入RequestContextHolder中
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request, response));
+
         ApiParam originalApiParam = resolveApiParam(request);
         ApiResponse apiResponse;
         ApiRegisterCenter.ApiRunnable apiRunnable;
@@ -420,8 +428,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                         validateParamValue(methodParamValidator.validate(args[i]));
                     }*/
                 } catch (Exception e) {
-                    throw new ApiException("调用失败：‘" + paramNames[i] + "’参数错误："
-                            + e.getMessage());
+                    throw new ApiException("调用失败：‘" + paramNames[i] + "’参数错误：" + e.getMessage());
                 }
             } else if ((resolver = apiRegisterCenter.supportsParameter(apiRunnable.getMethodParameters().get(i))) != null) {
                 try {
@@ -432,7 +439,11 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
                             + e.getMessage());
                 }
             } else {
-                args[i] = null;
+                try {
+                    args[i] = convertJsonToBean(paramMap.get(paramNames[i]), paramTypes[i]);
+                } catch (Exception e) {
+                    args[i] = null;
+                }
             }
         }
 
@@ -462,24 +473,52 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
     // 将MAP转换成具体的目标方方法参数对象
     private <T> Object convertJsonToBean(Object val, Class<T> targetClass) throws Exception {
         Object result = null;
-        if (val == null) {
+        /*if (val == null) {
             return null;
-        } else if (Integer.class.equals(targetClass)) {
-            result = Integer.parseInt(val.toString());
-        } else if (Long.class.equals(targetClass)) {
-            result = Long.parseLong(val.toString());
-        } else if (Date.class.equals(targetClass)) {
-            if (val.toString().matches("[0-9]+")) {
-                result = new Date(Long.parseLong(val.toString()));
-            } else {
-                throw new IllegalArgumentException("日期必须是长整型的时间戳");
+        } else */if (Integer.class.equals(targetClass)) {
+            try {
+                result = Integer.parseInt(val.toString());
+            } catch (Exception e) {
+                result = 0;
             }
+        } else if (Long.class.equals(targetClass)) {
+            try {
+                result = Long.parseLong(val.toString());
+            } catch (Exception e) {
+                result = 0;
+            }
+        } else if (Float.class.equals(targetClass)) {
+            try {
+                result = Float.parseFloat(val.toString());
+            } catch (Exception e) {
+                result = 0;
+            }
+        } else if (Double.class.equals(targetClass)) {
+            try {
+                result = Double.parseDouble(val.toString());
+            } catch (Exception e) {
+                result = 0;
+            }
+        } else if (Boolean.class.equals(targetClass)) {
+            try {
+                result = Boolean.valueOf(val.toString());
+            } catch (Exception e) {
+                result = false;
+            }
+        } else if (Date.class.equals(targetClass)) {
+            if (val != null && val.toString().matches("[0-9]+")) {
+                result = new Date(Long.parseLong(val.toString()));
+            }/* else {
+                throw new IllegalArgumentException("日期必须是长整型的时间戳");
+            }*/
         } else if (String.class.equals(targetClass)) {
             if (val instanceof String) {
                 result = val;
-            } else {
+            } else if (val != null) {
                 result = val.toString();
             }
+        } else if (val == null) {
+            return null;
         } else {
             result = JsonUtils.convertValue(val, targetClass);
         }
