@@ -283,7 +283,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         // 时间差校验
         long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
         if (apiProperties.isCheckTimestamp() && diffTime > apiProperties.getTimestampDiffer()) {
-            throw new ApiException(ApiCode.CHECK_TIME_INVALID);
+            throw new ApiException(ApiCode.CHECK_ILLEGAL_TIME);
         }
 
         // 客户端设备校验
@@ -318,7 +318,7 @@ public class ApiGatewayHandler implements InitializingBean, ApplicationContextAw
         // 时间差校验
         long diffTime = Math.abs(Long.valueOf(apiRequest.getTimestamp()) - System.currentTimeMillis());
         if (apiProperties.isCheckTimestamp() && diffTime > apiProperties.getTimestampDiffer()) {
-            throw new ApiException(ApiCode.CHECK_TIME_INVALID);
+            throw new ApiException(ApiCode.CHECK_ILLEGAL_TIME);
         }
 
         return apiRequest;
