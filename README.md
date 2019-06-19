@@ -7,7 +7,8 @@
 * 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
 * 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数
 * 支持方法参数添加@Valid注解进行参数校验  
-* 支持自定义ApiInvokeInterceptor实现请求接口拦截
+* 支持自定义ApiInvokeInterceptor实现请求接口拦截  
+* 提供ApiClientService服务实现多个安全网关服务间互调操作  
 
 #### 用法
 (1). 创建数据库和表
@@ -170,6 +171,16 @@ cn.denvie.api.enableLogging=false
 cn.denvie.api.subSecret=safe_api_gateway
 ## Sub Api 的RSA私钥
 cn.denvie.api.subPrivateSecret=
+## Rest Client 调用的接口路径
+cn.denvie.api.client-base-url=http://192.168.8.18:8090/subApi
+## Rest Client 参数加密的私钥
+cn.denvie.api.client-secret=safe_api_gateway
+## Rest Client 连接超时时间
+cn.denvie.api.client-connect-timeout=8000
+## Rest Client 读取超时时间
+cn.denvie.api.client-read-timeout=30000
+## Rest Client 请求编码
+cn.denvie.api.client-request-charset=UTF-8
 ```
 
 #### 自定义接口调用结果ResponseService的实现

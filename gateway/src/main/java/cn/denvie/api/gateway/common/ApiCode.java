@@ -32,7 +32,11 @@ public enum ApiCode {
     API_NAME_NULL("10400", "执行失败，接口名为空"),
     API_UN_EXIST("10401", "执行失败，接口不存在"),
     API_TOKEN_NULL("10402", "执行失败，Token为空"),
-    API_SIGN_NULL("10403", "执行失败，签名为空");
+    API_SIGN_NULL("10403", "执行失败，签名为空"),
+    CLIENT_PARAM_ERROR("10500", "ApiClient请求失败，参数错误"),
+    CLIENT_API_URL_NULL("10501", "ApiClient请求失败，调用服务地址未指定"),
+    CLIENT_API_NAME_NULL("10502", "ApiClient请求失败，调用接口名称未指定"),
+    CLIENT_SECRET_NULL("10503", "ApiClient请求失败，私钥未指定");
 
     private String code;
     private String message;

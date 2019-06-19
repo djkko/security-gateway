@@ -67,6 +67,21 @@ public class ApiConfig {
      */
     public static final String SUB_SECRET = "safe_api_gateway";
 
+    /**
+     * Rest Client 读取超时时间
+     */
+    public static int CLIENT_READ_TIMEOUT = 30000;
+
+    /**
+     * Rest Client 连接超时时间
+     */
+    public static int CLIENT_CONNECT_TIMEOUT = 8000;
+
+    /**
+     * Rest Client 请求编码
+     */
+    public static String CLIENT_REQUEST_CHARSET = "UTF-8";
+
     ///////////////////////////////////////////////////////////////////////////
     // Default Service Implement
     ///////////////////////////////////////////////////////////////////////////

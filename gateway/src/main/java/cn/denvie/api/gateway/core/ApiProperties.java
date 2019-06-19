@@ -66,6 +66,26 @@ public class ApiProperties {
      * Sub Api 的RSA私钥
      */
     private String subPrivateSecret = "";
+    /**
+     * Rest Client 调用的接口路径
+     */
+    private String clientBaseUrl;
+    /**
+     * Rest Client 参数加密的私钥
+     */
+    private String clientSecret;
+    /**
+     * Rest Client 读取超时时间
+     */
+    private int clientReadTimeout = ApiConfig.CLIENT_READ_TIMEOUT;
+    /**
+     * Rest Client 连接超时时间
+     */
+    private int clientConnectTimeout = ApiConfig.CLIENT_CONNECT_TIMEOUT;
+    /**
+     * Rest Client 请求编码
+     */
+    private String clientRequestCharset = ApiConfig.CLIENT_REQUEST_CHARSET;
 
     public EnctyptType getEncryptType() {
         return encryptType;
@@ -169,5 +189,45 @@ public class ApiProperties {
 
     public void setSubPrivateSecret(String subPrivateSecret) {
         this.subPrivateSecret = subPrivateSecret;
+    }
+
+    public String getClientBaseUrl() {
+        return clientBaseUrl;
+    }
+
+    public void setClientBaseUrl(String clientBaseUrl) {
+        this.clientBaseUrl = clientBaseUrl;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
+    public int getClientReadTimeout() {
+        return clientReadTimeout;
+    }
+
+    public void setClientReadTimeout(int clientReadTimeout) {
+        this.clientReadTimeout = clientReadTimeout;
+    }
+
+    public int getClientConnectTimeout() {
+        return clientConnectTimeout;
+    }
+
+    public void setClientConnectTimeout(int clientConnectTimeout) {
+        this.clientConnectTimeout = clientConnectTimeout;
+    }
+
+    public String getClientRequestCharset() {
+        return clientRequestCharset;
+    }
+
+    public void setClientRequestCharset(String clientRequestCharset) {
+        this.clientRequestCharset = clientRequestCharset;
     }
 }
