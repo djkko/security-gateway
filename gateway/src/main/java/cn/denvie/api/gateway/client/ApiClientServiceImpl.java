@@ -8,6 +8,8 @@ import cn.denvie.api.gateway.core.ApiRequest;
 import cn.denvie.api.gateway.service.SubSignatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -22,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * API安全网关客户端服务实现。
@@ -77,9 +80,17 @@ public class ApiClientServiceImpl implements ApiClientService {
             invokeParam.setSign(sign);
         }
 
+        // 添加Header
+        HttpHeaders headers = new HttpHeaders();
+        if (paramBuilder.getHeaderMap() != null && !paramBuilder.getHeaderMap().isEmpty()) {
+            for (Map.Entry<String, String> entry : paramBuilder.getHeaderMap().entrySet()) {
+                headers.add(entry.getKey(), entry.getValue());
+            }
+        }
+
         // 发起请求
         ResponseEntity<T> responseEntity = getRestTemplate()
-                .postForEntity(invokeParam.getBaseUrl(), invokeParam, clazz);
+                .postForEntity(invokeParam.getBaseUrl(), new HttpEntity<>(invokeParam, headers), clazz);
 
         return responseEntity.getBody();
     }

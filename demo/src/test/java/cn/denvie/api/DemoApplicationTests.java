@@ -22,6 +22,9 @@ public class DemoApplicationTests {
     public void testApiClient() throws ApiException {
         InvokeParam.Builder builder = new InvokeParam.Builder("user_list");
         builder.addParam("name", "ApiClientName");
+        builder.sign("使用自定义规则生成的签名");
+        builder.addHeader("header1", "value1")
+                .addHeader("header1", "value2");
         String result = apiClientService.post(builder);
         System.out.println(result);
     }

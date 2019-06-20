@@ -160,6 +160,10 @@ public class InvokeParam implements Serializable {
             return this;
         }
 
+        public Map<String, String> getHeaderMap() {
+            return headerMap;
+        }
+
         public InvokeParam build() {
             InvokeParam invokeParam = new InvokeParam();
             invokeParam.baseUrl = this.baseUrl;

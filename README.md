@@ -183,6 +183,57 @@ cn.denvie.api.client-read-timeout=30000
 cn.denvie.api.client-request-charset=UTF-8
 ```
 
+#### API安全网关之间互调操作说明
+在配置文件中添加ApiClient相关的设置  
+```
+## Rest Client 调用的接口路径
+cn.denvie.api.client-base-url=http://192.168.8.18:8080/subApi
+## Rest Client 参数加密的私钥
+cn.denvie.api.client-secret=safe_api_gateway
+## Rest Client 连接超时时间（可选）
+cn.denvie.api.client-connect-timeout=8000
+## Rest Client 读取超时时间（可选）
+cn.denvie.api.client-read-timeout=30000
+## Rest Client 请求编码（可选）
+cn.denvie.api.client-request-charset=UTF-8
+```
+在需要调用API的服务类中注入ApiClientService  
+```
+@Autowired
+private ApiClientService apiClientService;
+```
+请求的示例代码如下：  
+```
+InvokeParam.Builder builder = new InvokeParam.Builder("/api/name");
+builder.addParam("name", "ApiClientName");
+String result = apiClientService.post(builder);
+System.out.println(result);
+```
+以上配置仅适用于应用内只调用一个外部安全API服务器的情况，如果需要调用多个安全API服务器，则需要通用以下示例方法动态设置请求的服务器地址及使用的加密密钥：  
+```
+InvokeParam.Builder builder = new InvokeParam.Builder("/api/name ")
+.baseUrl("http://host.serverA:8080/subApi")
+.secret("safe_apigateway1");
+builder.addParam("name", "ApiClientName");
+String result = apiClientService.post(builder);
+System.out.println(result);
+
+InvokeParam.Builder builder2 = new InvokeParam.Builder("/api/name ")
+.baseUrl("http://host.serverB:8080/subApi")
+.secret("safe_apigateway2");
+Builder2.addParam("name", "ApiClientName");
+String result2 = apiClientService.post(builder);
+System.out.println(result2);
+```
+构建InvokeParam.Builder时也可以动态设置签名及添加Header：
+```
+InvokeParam.Builder builder = new InvokeParam.Builder("user_list");
+builder.addParam("name", "ApiClientName");
+builder.sign("使用自定义规则生成的签名");
+builder.addHeader("header1", "value1")
+    .addHeader("header1", "value2");
+```
+
 #### 自定义接口调用结果ResponseService的实现
 ```
 import cn.denvie.api.gateway.common.ApiResponse;
