@@ -3,19 +3,19 @@
 #### 介绍
 **security-gateway**是一款基于SpringBoot的简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率。
 同时，支持请求参数的加密加签，保证接口安全。  
-* 参数加密方式支持Base64、AES、RSA，可通过配置文件设置
-* 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
-* 兼容HandlerMethodArgumentResolver，可通过自定义HandlerMethodArgumentResolver实例注入参数
+* 参数加密方式支持**Base64**、**AES**、**RSA**，可通过配置文件设置
+* 签名方式提供了默认实现，调用方也可通过实现**SignatureService**接口的@Service自定义规则
+* 兼容HandlerMethodArgumentResolver，可通过自定义**HandlerMethodArgumentResolver**实例注入参数
 * 支持方法参数添加@Valid注解进行参数校验  
-* 支持自定义ApiInvokeInterceptor实现请求接口拦截  
+* 支持自定义**ApiInvokeInterceptor**实现请求接口拦截  
 * 提供ApiClientService服务实现多个安全网关服务间互调操作  
 
 #### 用法
 (1). 创建数据库和表
-```
+```SQL
 CREATE DATABASE `security-gateway` CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
 ```
-```
+```SQL
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -47,7 +47,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 ```
 
 (2). 在配置文件中配置数据源
-```
+```Shell
 spring.jpa.show-sql=true
 spring.jpa.hibernate.ddl-auto=none
 spring.jpa.database-platform=org.hibernate.dialect.MySQL5Dialect
@@ -68,10 +68,10 @@ spring.datasource.hikari.pool-name=HikariCp4HikeApi
 spring.datasource.hikari.connection-test-query=SELECT 1
 ```
 
-(3). 在用户登录、注册过程中，调用ApiTokenService创建一个ApiToken，并将accessToken、secret、expireTime一并返回给客户端。
+(3). 在用户登录、注册过程中，调用**ApiTokenService**创建一个ApiToken，并将accessToken、secret、expireTime一并返回给客户端。
 
-(4). 在Spring管理的Bean的方法上添加@ApiMapping注解，即可对外暴露一个接口。
-```
+(4). 在Spring管理的Bean的方法上添加 **@ApiMapping** 注解，即可对外暴露一个接口。
+```Java
 @Service
 public class UserServiceImpl implements UserService {
     static final String BASE_PATH = "/Api/";
@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
     }
 }
 ```
-@ApiMapping的属性说明：  
+**@ApiMapping**的属性说明：  
 value：接口名，需全局唯一  
 needLogin：是否需要Token校验，默认为true   
 paramNames：接口参数名列表（建议通过注解设置，防止部分环境下字节码解析获取不到参数名）  
@@ -89,11 +89,11 @@ paramNames：接口参数名列表（建议通过注解设置，防止部分环�
 (5). 需要Token校验的Api的接口请求路径为 http://localhost:8080/api  
 
 传参方式为“FORM”时的接口的调用格式为：
-```
+```HTML
 http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"aa123456"}&token=3343fd1f23544c19a622d1a3dae52fd3&clientType=android&clientCode=LO290DAL183K&timestamp=1556442217873&sign=BE16798DBA1561A8AD369C0438AEE5A0
 ```    
 传参方式为“BODY”时的接口的调用格式为：http://localhost:8080/api，请求BODY的类型为“application/json”，BODY值格式如下：  
-```
+```JSON
 {
 	"name": "/user/add",
 	"params": "o+bA2FaNZXJYLmEJKTSmXbj9nnydfUYwYUFkEo/vsOQ1QMkNY9EXeqb2hTv7pns9",
@@ -104,7 +104,6 @@ http://localhost:8080/api?name=user_add&params={"username":"denvie","password":"
 	"sign": "3758874B4E8BB86E9F01634035AE376D"
 }
 ```  
-
 参数说明如下：  
 name：@ApiMapping定义的接口名  
 params: JSON格式加密后的请求参数  
@@ -116,7 +115,7 @@ sign：参数签名
 其中，token、clientType、clientCode三个参数的传值同时支持Header及Param方式。
 
 (6). 不需要Token校验的SubApi的接口请求路径为 http://localhost:8080/subApi，请求BODY的参数示例：
-```
+```JSON
 {
     "name": "/user/list",
     "params": "vYqqaGSz6RwQQfLqX18+7omz92Zdplf+HfY1J0uw2uU=",
@@ -125,7 +124,6 @@ sign：参数签名
 }
 ``` 
 其中，不需要Token校验的接口的@ApiMapping注解必需设置属性needLogin = false！
-
 参数说明如下：  
 name：@ApiMapping定义的接口名  
 params: JSON格式加密后的请求参数 
@@ -133,7 +131,7 @@ timestamp：Long类型的请求时间戳
 sign：参数签名  
 
 (6). SpringBoot启动类添加扫描的API网关包路径声明"cn.denvie.api"：
-```
+```Java
 @SpringBootApplication(scanBasePackages = {"com.demo", "cn.denvie.api"})
 @EntityScan(basePackages = {"com.demo", "cn.denvie.api"})
 @EnableJpaRepositories(basePackages = {"com.demo", "cn.denvie.api"})
@@ -144,7 +142,7 @@ public class ToptokenApplication extends SpringBootServletInitializer {
 ```
 
 #### API网关配置项（如不设置，则默认值为以下各项的值）
-```
+```Shell
 ## 参数加密方式，目前支持：Base64、AES、RSA
 cn.denvie.api.encryptType=AES
 ## AES加密算法密钥（16位），若不配置，则自动生成
@@ -184,8 +182,8 @@ cn.denvie.api.client-request-charset=UTF-8
 ```
 
 #### API安全网关之间互调操作说明
-在配置文件中添加ApiClient相关的设置  
-```
+在配置文件中添加**ApiClient**相关的设置  
+```Shell
 ## Rest Client 调用的接口路径
 cn.denvie.api.client-base-url=http://192.168.8.18:8080/subApi
 ## Rest Client 参数加密的私钥
@@ -197,7 +195,7 @@ cn.denvie.api.client-read-timeout=30000
 ## Rest Client 请求编码（可选）
 cn.denvie.api.client-request-charset=UTF-8
 ```
-在需要调用API的服务类中注入ApiClientService  
+在需要调用API的服务类中注入**ApiClientService**  
 ```
 @Autowired
 private ApiClientService apiClientService;
@@ -234,8 +232,8 @@ builder.addHeader("header1", "value1")
     .addHeader("header1", "value2");
 ```
 
-#### 自定义接口调用结果ResponseService的实现
-```
+#### 自定义接口调用结果**ResponseService**的实现
+```Java
 import cn.denvie.api.gateway.common.ApiResponse;
 import org.springframework.stereotype.Service;
 
@@ -258,8 +256,8 @@ public class ResponseServiceImpl implements ResponseService {
 }
 ```
 
-#### 自定义签名生成规则SignatureService的实现
-```
+#### 自定义签名生成规则**SignatureService**的实现
+```Java
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
 
@@ -273,8 +271,8 @@ public class SignatureServiceImpl implements SignatureService {
 ```
 默认签名规则：MD5（secret + apiName + token + params + timestamp + secret）.toUpperCase()
 
-#### 自定义Sub Api签名生成规则SubSignatureService的实现
-```
+#### 自定义Sub Api签名生成规则**SubSignatureService**的实现
+```Java
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
 
@@ -288,8 +286,8 @@ public class SubSignatureServiceImpl implements SubSignatureService {
 ```
 默认签名规则：MD5（secret + apiName + params + secret）.toUpperCase()
 
-#### 自定义接口调用异常处理器InvokeExceptionHandler的实现
-```
+#### 自定义接口调用异常处理器**InvokeExceptionHandler**的实现
+```Java
 import cn.denvie.api.gateway.common.ApiResponse;
 import cn.denvie.api.gateway.core.ApiRequest;
 import org.springframework.stereotype.Service;
@@ -303,8 +301,8 @@ public class InvokeExceptionHandlerImpl implements InvokeExceptionHandler {
 }
 ```
 
-#### 自定义接口请求拦截器ApiInvokeInterceptor的实现
-```
+#### 自定义接口请求拦截器**ApiInvokeInterceptor**的实现
+```Java
 import cn.denvie.api.gateway.common.ApiInvokeInterceptor;
 import cn.denvie.api.gateway.common.InvokeCode;
 import cn.denvie.api.gateway.core.ApiRequest;
