@@ -1,7 +1,7 @@
-# api-gateway
+# security-gateway
 
 #### 介绍
-一款基于SpringBoot的简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率。
+**security-gateway**是一款基于SpringBoot的简单、安全、灵活的API网关框架，可替代传统的Controller层，提升接口开发效率。
 同时，支持请求参数的加密加签，保证接口安全。  
 * 参数加密方式支持Base64、AES、RSA，可通过配置文件设置
 * 签名方式提供了默认实现，调用方也可通过实现SignatureService接口的@Service自定义规则
@@ -13,7 +13,7 @@
 #### 用法
 (1). 创建数据库和表
 ```
-CREATE DATABASE `api-gateway` CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
+CREATE DATABASE `security-gateway` CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_general_ci';
 ```
 ```
 SET NAMES utf8mb4;
@@ -54,7 +54,7 @@ spring.jpa.database-platform=org.hibernate.dialect.MySQL5Dialect
 
 ## data source config, use HikariDataSource
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.datasource.url=jdbc:mysql://localhost:3306/api-gateway?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2B8
+spring.datasource.url=jdbc:mysql://localhost:3306/security-gateway?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2B8
 spring.datasource.username=root
 spring.datasource.password=root
 spring.datasource.type=com.zaxxer.hikari.HikariDataSource
